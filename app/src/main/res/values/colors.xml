@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="emerald">#0B9685</color>
+    <color name="emerald_deep">#087F73</color>
+    <color name="mint">#E9FAF5</color>
+    <color name="navy_action">#243F91</color>
+    <color name="action_blue">#2864E8</color>
+    <color name="light_blue">#EEF4FF</color>
+    <color name="page">#F6F9FC</color>
+    <color name="card">#FFFFFF</color>
+    <color name="line">#E3EAF1</color>
+    <color name="text_primary">#14243A</color>
+    <color name="text_secondary">#65758B</color>
+    <color name="text_muted">#94A3B8</color>
+    <color name="success">#12B76A</color>
+    <color name="success_bg">#E8FAF0</color>
+    <color name="warning">#F59E0B</color>
+    <color name="warning_bg">#FFF7E8</color>
+    <color name="error">#F04444</color>
+    <color name="error_bg">#FFF0F0</color>
+    <color name="purple">#8B5CF6</color>
+    <color name="purple_bg">#F3EEFF</color>
+    <color name="sos">#EF4444</color>
+    <color name="sos_bg">#FFF1F1</color>
+
+    <color name="theme">#0B9685</color>
+    <color name="theme_bright">#0B9685</color>
+    <color name="theme_soft">#E9FAF5</color>
+    <color name="navy">#14243A</color>
+    <color name="muted">#65758B</color>
+    <color name="pending">#B45309</color>
+    <color name="pending_bg">#FFF7E8</color>
+    <color name="pill_blue_bg">#EEF4FF</color>
+    <color name="pill_blue_text">#243F91</color>
+    <color name="avatar">#0B9685</color>
+    <color name="nav_idle">#94A3B8</color>
+</resources>

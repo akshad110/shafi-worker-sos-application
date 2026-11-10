@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/navigation_home">
+
+    <fragment
+        android:id="@+id/navigation_home"
+        android:name="com.example.shafi.ui.home.HomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_home" />
+
+    <fragment
+        android:id="@+id/navigation_post_job"
+        android:name="com.example.shafi.ui.postjob.PostJobFragment"
+        android:label="Posts"
+        tools:layout="@layout/fragment_post_job" />
+
+    <fragment
+        android:id="@+id/navigation_application"
+        android:name="com.example.shafi.ui.application.ApplicationFragment"
+        android:label="Applied"
+        tools:layout="@layout/fragment_application" />
+
+    <fragment
+        android:id="@+id/navigation_shifts"
+        android:name="com.example.shafi.ui.shifts.ShiftsFragment"
+        android:label="Confirmed"
+        tools:layout="@layout/fragment_shifts" />
+
+    <fragment
+        android:id="@+id/navigation_profile"
+        android:name="com.example.shafi.ui.profile.ProfileFragment"
+        android:label="Profile"
+        tools:layout="@layout/fragment_profile" />
+
+</navigation>

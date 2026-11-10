@@ -1,0 +1,73 @@
+{
+  "info": {
+    "name": "Hospital SOS API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:4000/api/v1" },
+    { "key": "accessToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+    },
+    {
+      "name": "Register worker",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Sara Worker\",\n  \"mobile\": \"9876543210\",\n  \"email\": \"sara@example.com\",\n  \"password\": \"Worker#Demo1\",\n  \"healthcareRole\": \"Registered Nurse\",\n  \"consent\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "Verify OTP",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/verify-otp",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobile\": \"9876543210\",\n  \"code\": \"000000\",\n  \"purpose\": \"REGISTER\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobile\": \"9876543210\",\n  \"password\": \"Worker#Demo1\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Jobs",
+      "request": { "method": "GET", "url": "{{baseUrl}}/jobs?sort=newest" }
+    },
+    {
+      "name": "Dashboard",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/workers/me/dashboard"
+      }
+    },
+    {
+      "name": "Apply",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+        "url": "{{baseUrl}}/jobs/{{jobId}}/applications",
+        "body": { "mode": "raw", "raw": "{}" }
+      }
+    }
+  ]
+}
