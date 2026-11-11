@@ -31,6 +31,7 @@ function jobCard(job: any, distanceKm: number | null = null) {
     healthcareRole: job.healthcareRole,
     department: job.department,
     city: job.city,
+    state: job.state || '',
     address: job.address,
     shiftDate: job.shiftDate,
     startTime: job.startTime,
@@ -192,7 +193,7 @@ export async function listJobs(query: Record<string, string>, workerId?: string)
     let items = shared.slice();
     if (query.q) {
       const q = query.q.toLowerCase();
-      items = items.filter((job) => [job.title, job.hospitalName, job.city, job.department, job.healthcareRole]
+      items = items.filter((job) => [job.title, job.hospitalName, job.city, job.state, job.address, job.department, job.healthcareRole]
         .some((value) => String(value || '').toLowerCase().includes(q)));
     }
     if (query.role) items = items.filter((job) => job.healthcareRole === query.role);
@@ -219,7 +220,7 @@ export async function listJobs(query: Record<string, string>, workerId?: string)
   const and = filter.$and as unknown[];
   if (query.q) {
     const rx = new RegExp(escapeRegex(query.q), 'i');
-    and.push({ $or: [{ title: rx }, { hospitalName: rx }, { city: rx }, { department: rx }, { healthcareRole: rx }] });
+    and.push({ $or: [{ title: rx }, { hospitalName: rx }, { city: rx }, { state: rx }, { address: rx }, { department: rx }, { healthcareRole: rx }] });
   }
   if (query.role) filter.healthcareRole = query.role;
   if (query.department) filter.department = new RegExp(escapeRegex(query.department), 'i');
@@ -840,6 +841,7 @@ export async function dashboard(userId: string) {
     underReview: statuses.filter((item) => item === 'UNDER_REVIEW' || item === 'SUBMITTED').length,
     shortlisted: statuses.filter((item) => item === 'SHORTLISTED').length,
     offered: statuses.filter((item) => item === 'OFFERED').length,
+    rejected: statuses.filter((item) => item === 'REJECTED' || item === 'DECLINED').length,
     confirmed: statuses.filter((item) => item === 'ACCEPTED').length,
   };
   const now = new Date();

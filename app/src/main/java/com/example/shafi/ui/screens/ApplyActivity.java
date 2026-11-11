@@ -68,7 +68,6 @@ public class ApplyActivity extends AppCompatActivity {
             return;
         }
         String type = TYPES[binding.spType.getSelectedItemPosition()];
-        String note = binding.etNote.getText().toString().trim();
         binding.btnSubmit.setEnabled(false);
         binding.progress.setVisibility(View.VISIBLE);
         binding.tvError.setVisibility(View.GONE);
@@ -79,7 +78,7 @@ public class ApplyActivity extends AppCompatActivity {
                 String mime = getContentResolver().getType(fileUri);
                 if (mime == null || mime.isEmpty()) mime = fileName.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg";
                 repository.upload(type, fileName.isEmpty() ? "document" : fileName, mime, bytes);
-                Dtos.ApplicationItem application = repository.apply(jobId, note);
+                Dtos.ApplicationItem application = repository.apply(jobId);
                 runOnUiThread(() -> {
                     binding.progress.setVisibility(View.GONE);
                     new AlertDialog.Builder(this)

@@ -113,6 +113,10 @@ public final class Format {
         return builder.toString();
     }
 
+    public static String clock() {
+        return new SimpleDateFormat("h:mm a", Locale.US).format(new Date());
+    }
+
     public static String greeting() {
         int hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
         if (hour < 12) return "Good morning";

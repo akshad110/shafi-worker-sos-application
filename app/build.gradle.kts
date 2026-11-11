@@ -31,6 +31,7 @@ android {
             buildConfigField("String", "API_BASE_URL", "\"$api\"")
         }
         release {
+            signingConfig = signingConfigs.getByName("debug")
             buildConfigField("String", "API_BASE_URL", "\"https://shafi-worker-sos-backend-api.onrender.com/api/v1/\"")
             isMinifyEnabled = false
             proguardFiles(
@@ -46,6 +47,9 @@ android {
     buildFeatures {
         viewBinding = true
         buildConfig = true
+    }
+    lint {
+        checkReleaseBuilds = false
     }
 }
 

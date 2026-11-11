@@ -22,7 +22,7 @@
         android:layout_height="48dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/bg_input_field"
-        android:hint="Job, hospital, or city"
+        android:hint="Hospital, city, or state"
         android:imeOptions="actionSearch"
         android:inputType="text"
         android:paddingStart="14dp"

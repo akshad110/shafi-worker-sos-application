@@ -21,69 +21,124 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:id="@+id/tv_greeting"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/muted"
-                    android:textSize="13sp" />
+                    android:background="@drawable/bg_greeting"
+                    android:orientation="vertical"
+                    android:paddingStart="20dp"
+                    android:paddingTop="20dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="20dp">
 
-                <TextView
-                    android:id="@+id/tv_name"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/navy"
-                    android:textSize="24sp"
-                    android:textStyle="bold" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/tv_role"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textColor="@color/muted"
-                    android:textSize="13sp" />
+                        <TextView
+                            android:id="@+id/tv_greeting"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textColor="@color/white"
+                            android:textSize="15sp" />
+
+                        <TextView
+                            android:id="@+id/tv_clock"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_clock_light"
+                            android:paddingStart="10dp"
+                            android:paddingTop="4dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="4dp"
+                            android:textColor="@color/navy"
+                            android:textSize="12sp" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:textColor="@color/white"
+                        android:textSize="32sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_role"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_clock_light"
+                        android:paddingStart="10dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="10dp"
+                        android:paddingBottom="4dp"
+                        android:textColor="@color/emerald_deep"
+                        android:textSize="13sp" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/card_profile"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:background="@drawable/bg_card"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_surface"
                     android:orientation="vertical"
-                    android:padding="14dp">
+                    android:paddingStart="20dp"
+                    android:paddingTop="18dp"
+                    android:paddingEnd="20dp"
+                    android:paddingBottom="18dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_stat_mint"
+                        android:paddingStart="10dp"
+                        android:paddingTop="4dp"
+                        android:paddingEnd="10dp"
+                        android:paddingBottom="4dp"
+                        android:text="Credential health"
+                        android:textColor="@color/emerald_deep"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tv_credential"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
                         android:textColor="@color/navy"
-                        android:textSize="15sp"
+                        android:textSize="26sp"
                         android:textStyle="bold" />
 
                     <ProgressBar
                         android:id="@+id/progress_profile"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
-                        android:layout_marginTop="8dp"
+                        android:layout_height="10dp"
+                        android:layout_marginTop="14dp"
                         android:max="100"
-                        android:progressTint="@color/emerald" />
+                        android:progressDrawable="@drawable/bg_progress" />
 
                     <TextView
                         android:id="@+id/tv_credential_note"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textColor="@color/muted"
-                        android:textSize="13sp" />
+                        android:layout_marginTop="12dp"
+                        android:lineSpacingExtra="3dp"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btn_finish_profile"
                         style="@style/Widget.Shafi.Button"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginTop="16dp"
                         android:text="Finish profile"
                         android:visibility="gone" />
                 </LinearLayout>
@@ -92,142 +147,213 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
+                    android:baselineAligned="false"
                     android:orientation="horizontal">
 
                     <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="6dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="10dp"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_card"
+                        android:background="@drawable/bg_stat_mint"
+                        android:gravity="center"
+                        android:minHeight="96dp"
                         android:orientation="vertical"
-                        android:padding="10dp">
+                        android:paddingStart="8dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="16dp">
 
                         <TextView
                             android:id="@+id/tv_stat_applied"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/navy"
-                            android:textSize="18sp"
+                            android:gravity="center"
+                            android:textColor="@color/emerald_deep"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
                             android:text="Applied"
-                            android:textColor="@color/muted"
-                            android:textSize="11sp" />
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="6dp"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_card"
+                        android:background="@drawable/bg_stat_blue"
+                        android:gravity="center"
+                        android:minHeight="96dp"
                         android:orientation="vertical"
-                        android:padding="10dp">
+                        android:paddingStart="8dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="16dp">
 
                         <TextView
                             android:id="@+id/tv_stat_review"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/navy"
-                            android:textSize="18sp"
+                            android:gravity="center"
+                            android:textColor="@color/navy_action"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
                             android:text="In review"
-                            android:textColor="@color/muted"
-                            android:textSize="11sp" />
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
                     </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
 
                     <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="6dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginEnd="10dp"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_card"
+                        android:background="@drawable/bg_stat_rose"
+                        android:gravity="center"
+                        android:minHeight="96dp"
                         android:orientation="vertical"
-                        android:padding="10dp">
+                        android:paddingStart="8dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="16dp">
 
                         <TextView
                             android:id="@+id/tv_stat_offers"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/navy"
-                            android:textSize="18sp"
+                            android:gravity="center"
+                            android:textColor="@color/error"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Offers"
-                            android:textColor="@color/muted"
-                            android:textSize="11sp" />
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
+                            android:text="Rejected"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
                     </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:background="@drawable/bg_card"
+                        android:background="@drawable/bg_stat_green"
+                        android:gravity="center"
+                        android:minHeight="96dp"
                         android:orientation="vertical"
-                        android:padding="10dp">
+                        android:paddingStart="8dp"
+                        android:paddingTop="16dp"
+                        android:paddingEnd="8dp"
+                        android:paddingBottom="16dp">
 
                         <TextView
                             android:id="@+id/tv_stat_confirmed"
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/navy"
-                            android:textSize="18sp"
+                            android:gravity="center"
+                            android:textColor="@color/success"
+                            android:textSize="26sp"
                             android:textStyle="bold" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:gravity="center"
                             android:text="Confirmed"
-                            android:textColor="@color/muted"
-                            android:textSize="11sp" />
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
                     </LinearLayout>
                 </LinearLayout>
+
 
                 <LinearLayout
                     android:id="@+id/card_shift"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:background="@drawable/bg_card"
+                    android:layout_marginTop="14dp"
+                    android:background="@drawable/bg_shift_card"
+                    android:foreground="?attr/selectableItemBackground"
                     android:orientation="vertical"
-                    android:padding="14dp"
+                    android:padding="18dp"
                     android:visibility="gone">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Upcoming shift"
-                        android:textColor="@color/emerald_deep"
-                        android:textSize="12sp"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Upcoming shift"
+                            android:textAllCaps="true"
+                            android:textColor="@color/white_soft"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_clock_light"
+                            android:paddingStart="10dp"
+                            android:paddingTop="4dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="4dp"
+                            android:text="Open"
+                            android:textColor="@color/emerald_deep"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
                     <TextView
                         android:id="@+id/tv_shift_title"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textColor="@color/navy"
-                        android:textSize="16sp"
+                        android:layout_marginTop="12dp"
+                        android:textColor="@color/white"
+                        android:textSize="20sp"
                         android:textStyle="bold" />
+
+                    <View
+                        android:layout_width="48dp"
+                        android:layout_height="2dp"
+                        android:layout_marginTop="10dp"
+                        android:background="#80FFFFFF" />
 
                     <TextView
                         android:id="@+id/tv_shift_meta"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:textColor="@color/muted"
-                        android:textSize="13sp" />
+                        android:layout_marginTop="8dp"
+                        android:lineSpacingExtra="3dp"
+                        android:textColor="@color/white_soft"
+                        android:textSize="14sp" />
                 </LinearLayout>
 
                 <TextView
@@ -238,6 +364,34 @@
                     android:textColor="@color/navy"
                     android:textSize="16sp"
                     android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/et_location"
+                    android:layout_width="match_parent"
+                    android:layout_height="46dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_search"
+                    android:hint="Search hospital, city, or state"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:textColor="@color/navy"
+                    android:textColorHint="@color/text_muted"
+                    android:textSize="14sp" />
+
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/location_chips"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_jobs"

@@ -55,29 +55,6 @@
             android:background="@drawable/bg_card" />
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Note for the hospital"
-            android:textColor="@color/navy"
-            android:textSize="13sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/et_note"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:background="@drawable/bg_card"
-            android:hint="Registration number, experience, or anything the hospital should see"
-            android:inputType="textCapSentences|textMultiLine"
-            android:minHeight="88dp"
-            android:padding="14dp"
-            android:textColor="@color/navy"
-            android:textColorHint="@color/text_muted"
-            android:textSize="15sp" />
-
-        <TextView
             android:id="@+id/btn_file"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

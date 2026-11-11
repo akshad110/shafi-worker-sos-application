@@ -46,7 +46,6 @@ public class ApplicationDetailActivity extends AppCompatActivity {
 
     private void show(Dtos.ApplicationItem loaded) {
         item = loaded;
-        binding.progress.setVisibility(View.GONE);
         binding.tvError.setVisibility(View.GONE);
         Dtos.JobItem job = loaded.job;
         binding.tvKicker.setText(job == null || job.hospitalName == null ? "Application" : job.hospitalName);
@@ -73,6 +72,8 @@ public class ApplicationDetailActivity extends AppCompatActivity {
         boolean canWithdraw = "SUBMITTED".equals(loaded.status) || "UNDER_REVIEW".equals(loaded.status) || "SHORTLISTED".equals(loaded.status);
         binding.btnSecondary.setVisibility(canWithdraw ? View.VISIBLE : View.GONE);
         binding.btnSecondary.setText("Withdraw");
+        binding.progress.setVisibility(View.GONE);
+        binding.content.setVisibility(View.VISIBLE);
         binding.btnSecondary.setOnClickListener(v -> AppDialog.confirm(this, "Withdraw application",
                 "The hospital will no longer consider this application.", "Withdraw", () -> {
                     binding.progress.setVisibility(View.VISIBLE);

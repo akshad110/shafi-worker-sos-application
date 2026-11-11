@@ -116,6 +116,8 @@
     <style name="Widget.Shafi.BottomSheet" parent="Widget.MaterialComponents.BottomSheet.Modal">
         <item name="shapeAppearance">@style/ShapeAppearance.Shafi.TopRounded</item>
         <item name="backgroundTint">@color/white</item>
+        <item name="paddingBottomSystemWindowInsets">false</item>
+        <item name="marginBottomSystemWindowInsets">false</item>
     </style>
 
     <style name="Theme.Shafi.BottomSheet" parent="Theme.MaterialComponents.Light.BottomSheetDialog">
@@ -123,5 +125,6 @@
         <item name="android:windowIsFloating">false</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@color/white</item>
+        <item name="enableEdgeToEdge">false</item>
     </style>
 </resources>

@@ -40,6 +40,7 @@ public final class Dtos {
         public String healthcareRole;
         public String department;
         public String city;
+        public String state;
         public String address;
         public String shiftDate;
         public String startTime;
@@ -83,6 +84,7 @@ public final class Dtos {
         public int underReview;
         public int shortlisted;
         public int offered;
+        public int rejected;
         public int confirmed;
     }
 

@@ -1,9 +1,7 @@
 package com.example.shafi.ui.screens;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -74,7 +72,6 @@ public class ShiftDetailActivity extends AppCompatActivity {
 
     private void show(Dtos.ShiftItem item) {
         shift = item;
-        binding.progress.setVisibility(View.GONE);
         binding.tvError.setVisibility(View.GONE);
         Dtos.JobItem job = item.job;
         String hospital = item.hospitalName != null && !item.hospitalName.isEmpty()
@@ -83,8 +80,17 @@ public class ShiftDetailActivity extends AppCompatActivity {
         String role = job != null && job.healthcareRole != null && !job.healthcareRole.isEmpty() && !"Shift".equals(job.healthcareRole)
                 ? job.healthcareRole
                 : (job != null && job.title != null && !job.title.isEmpty() && !"Shift".equals(job.title) ? job.title : hospital);
-        binding.tvKicker.setText(hospital);
-        binding.tvTitle.setText(role);
+        String department = item.department != null && !item.department.isEmpty() ? item.department : (job == null ? "" : job.department);
+        if ("Hospital".equals(hospital)) {
+            binding.tvKicker.setText(Format.status(item.status).isEmpty() ? "Shift" : Format.status(item.status) + " shift");
+            binding.tvTitle.setText(department != null && !department.isEmpty() ? department : "Shift");
+        } else {
+            if (role == null || role.isEmpty() || "Shift".equals(role) || role.equals(hospital)) {
+                role = department != null && !department.isEmpty() ? department : hospital;
+            }
+            binding.tvKicker.setText(hospital);
+            binding.tvTitle.setText(role);
+        }
         binding.tvStatus.setText(Format.status(item.status));
         PayRules pay = PayRules.of(item);
         binding.tvPayLabel.setText(pay.recorded ? "Payment recorded" : "Payment not recorded");
@@ -94,14 +100,9 @@ public class ShiftDetailActivity extends AppCompatActivity {
         String start = item.startTime != null && !item.startTime.isEmpty() ? item.startTime : (job == null ? "" : job.startTime);
         String end = item.endTime != null && !item.endTime.isEmpty() ? item.endTime : (job == null ? "" : job.endTime);
         row(binding.rowWhen, R.drawable.ic_calendar, "When", Format.shift(Format.prettyDate(day), start, end));
-        String department = item.department != null && !item.department.isEmpty() ? item.department : (job == null ? "" : job.department);
         String address = item.address != null && !item.address.isEmpty() ? item.address : (job == null ? "" : job.address);
         row(binding.rowPlace, R.drawable.ic_home_black_24dp, "Where", (department == null ? "" : department) + (address == null || address.isEmpty() ? "" : (department == null || department.isEmpty() ? "" : " · ") + address));
         row(binding.rowAttendance, R.drawable.ic_document, "Attendance", pay.mark);
-        String place = address == null ? "" : address;
-        binding.btnSecondary.setVisibility(place.isEmpty() ? View.GONE : View.VISIBLE);
-        binding.btnSecondary.setText("Open map");
-        binding.btnSecondary.setOnClickListener(v -> openMap());
         boolean ownShift = item.startAt != null && !item.startAt.isEmpty();
         if (!ownShift) {
             binding.btnPrimary.setVisibility(View.GONE);
@@ -120,6 +121,8 @@ public class ShiftDetailActivity extends AppCompatActivity {
         } else {
             binding.btnPrimary.setVisibility(View.GONE);
         }
+        binding.progress.setVisibility(View.GONE);
+        binding.content.setVisibility(View.VISIBLE);
     }
 
     private void row(RowDetailBinding row, int icon, String label, String value) {
@@ -159,20 +162,6 @@ public class ShiftDetailActivity extends AppCompatActivity {
                 runOnUiThread(() -> fail(error.getMessage()));
             }
         });
-    }
-
-    private void openMap() {
-        if (shift == null) return;
-        String address = shift.address != null && !shift.address.isEmpty() ? shift.address : (shift.job == null ? "" : shift.job.address);
-        String city = shift.city != null && !shift.city.isEmpty() ? shift.city : (shift.job == null ? "" : shift.job.city);
-        if ((address == null || address.isEmpty()) && (city == null || city.isEmpty())) return;
-        Uri uri;
-        if (shift.job != null && shift.job.latitude != null && shift.job.longitude != null) {
-            uri = Uri.parse("geo:" + shift.job.latitude + "," + shift.job.longitude + "?q=" + Uri.encode(address));
-        } else {
-            uri = Uri.parse("geo:0,0?q=" + Uri.encode((address == null ? "" : address) + " " + (city == null ? "" : city)));
-        }
-        startActivity(new Intent(Intent.ACTION_VIEW, uri));
     }
 
     private void feedback() {

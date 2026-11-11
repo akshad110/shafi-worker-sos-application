@@ -66,17 +66,18 @@ export function toAppStatus(status: string): string {
   return TO_APP[status] || status.toUpperCase();
 }
 
-async function hospitalName(hospitalId: string): Promise<{ name: string; verified: boolean; city: string }> {
+async function hospitalName(hospitalId: string): Promise<{ name: string; verified: boolean; city: string; state: string }> {
   const hospital = await collection('hospitals').findOne({ id: hospitalId });
   return {
     name: hospital?.name || 'Hospital',
     verified: Boolean(hospital?.verified),
     city: hospital?.city || '',
+    state: hospital?.state || hospital?.stateName || '',
   };
 }
 
-export function presentJob(job: Doc, hospital?: { name: string; verified: boolean; city: string }) {
-  const place = hospital || { name: 'Hospital', verified: false, city: '' };
+export function presentJob(job: Doc, hospital?: { name: string; verified: boolean; city: string; state?: string }) {
+  const place = hospital || { name: 'Hospital', verified: false, city: '', state: '' };
   const location = typeof job.location === 'string' ? job.location : '';
   const amount = Number(job.amount) || 0;
   let startAt: Date | null = null;
@@ -100,6 +101,7 @@ export function presentJob(job: Doc, hospital?: { name: string; verified: boolea
     healthcareRole: job.role || '',
     department: job.department || '',
     city: place.city || location,
+    state: place.state || job.state || job.stateName || '',
     address: location,
     shiftDate: job.date || '',
     startTime: job.startTime || '',
@@ -140,6 +142,7 @@ export async function loadPublishedJobs(): Promise<Doc[]> {
       name: hospital.name,
       verified: Boolean(hospital.verified),
       city: hospital.city || '',
+      state: hospital.state || hospital.stateName || '',
     } : undefined);
   });
 }
