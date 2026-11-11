@@ -30,8 +30,14 @@ public class ProfileViewModel extends AndroidViewModel {
     }
 
     public void refresh() {
-        profile.setValue(Resource.loading());
+        if (profile.getValue() == null || profile.getValue().data == null) {
+            profile.setValue(Resource.loading());
+        }
         AppExecutors.IO.execute(() -> {
+            if (profile.getValue() == null || profile.getValue().data == null) {
+                Dtos.ProfileResponse saved = repository.cachedProfile();
+                if (saved != null) profile.postValue(Resource.success(saved));
+            }
             try {
                 profile.postValue(Resource.success(repository.profile()));
             } catch (ApiException error) {
@@ -39,7 +45,7 @@ public class ProfileViewModel extends AndroidViewModel {
             } catch (IOException error) {
                 Dtos.ProfileResponse cached = repository.cachedProfile();
                 if (cached != null) profile.postValue(Resource.offline(cached, "Showing saved profile"));
-                else profile.postValue(Resource.error("Can't reach Hospital SOS. Check your connection."));
+                else profile.postValue(Resource.error("Can't reach Shafi SOS. Check your connection."));
             }
         });
     }
@@ -51,7 +57,7 @@ public class ProfileViewModel extends AndroidViewModel {
             } catch (ApiException error) {
                 profile.postValue(Resource.error(error.getMessage()));
             } catch (IOException error) {
-                profile.postValue(Resource.error("Can't reach Hospital SOS. Check your connection."));
+                profile.postValue(Resource.error("Can't reach Shafi SOS. Check your connection."));
             }
         });
     }

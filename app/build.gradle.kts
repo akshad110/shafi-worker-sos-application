@@ -27,11 +27,11 @@ android {
             }
             val api = (project.findProperty("API_BASE_URL") as String?)
                 ?: localProps.getProperty("API_BASE_URL")
-                ?: "http://10.0.2.2:4000/api/v1/"
+                ?: "https://shafi-worker-sos-backend-api.onrender.com/api/v1/"
             buildConfigField("String", "API_BASE_URL", "\"$api\"")
         }
         release {
-            buildConfigField("String", "API_BASE_URL", "\"https://api.hospitalsos.example/api/v1/\"")
+            buildConfigField("String", "API_BASE_URL", "\"https://shafi-worker-sos-backend-api.onrender.com/api/v1/\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

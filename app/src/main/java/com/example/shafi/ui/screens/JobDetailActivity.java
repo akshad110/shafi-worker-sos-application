@@ -1,5 +1,6 @@
 package com.example.shafi.ui.screens;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
@@ -11,7 +12,6 @@ import com.example.shafi.core.Format;
 import com.example.shafi.data.Dtos;
 import com.example.shafi.data.WorkerRepository;
 import com.example.shafi.databinding.ActivityRecordBinding;
-import com.example.shafi.ui.AppDialog;
 
 public class JobDetailActivity extends AppCompatActivity {
     private ActivityRecordBinding binding;
@@ -79,24 +79,10 @@ public class JobDetailActivity extends AppCompatActivity {
 
     private void confirmApply() {
         if (job == null) return;
-        AppDialog.confirm(this, "Apply for this shift",
-                "Your profile goes to the hospital. Shortlisting is not a confirmed assignment.",
-                "Apply", () -> {
-                    binding.progress.setVisibility(View.VISIBLE);
-                    AppExecutors.IO.execute(() -> {
-                        try {
-                            Dtos.ApplicationItem application = repository.apply(job.id);
-                            runOnUiThread(() -> {
-                                binding.progress.setVisibility(View.GONE);
-                                AppDialog.note(this, "Application sent", "Reference " + application.reference + ". Track it under Applications.");
-                                binding.btnPrimary.setText("Already applied");
-                                binding.btnPrimary.setEnabled(false);
-                            });
-                        } catch (Exception error) {
-                            runOnUiThread(() -> fail(error.getMessage()));
-                        }
-                    });
-                });
+        Intent intent = new Intent(this, ApplyActivity.class);
+        intent.putExtra("id", job.id);
+        if (job.title != null) intent.putExtra("title", job.title);
+        startActivity(intent);
     }
 
     private void fail(String message) {

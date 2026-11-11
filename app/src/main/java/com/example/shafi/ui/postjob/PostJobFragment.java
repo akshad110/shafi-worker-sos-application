@@ -1,6 +1,5 @@
 package com.example.shafi.ui.postjob;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,7 +19,6 @@ import com.example.shafi.core.Resource;
 import com.example.shafi.data.Dtos;
 import com.example.shafi.databinding.FragmentPostJobBinding;
 import com.example.shafi.ui.JobAdapter;
-import com.example.shafi.ui.screens.JobDetailActivity;
 import com.example.shafi.viewmodel.JobsViewModel;
 
 import java.util.List;
@@ -38,7 +36,7 @@ public class PostJobFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentPostJobBinding.inflate(inflater, container, false);
         viewModel = new ViewModelProvider(this).get(JobsViewModel.class);
-        JobAdapter adapter = new JobAdapter(job -> startActivity(new Intent(requireContext(), JobDetailActivity.class).putExtra("id", job.id)));
+        JobAdapter adapter = new JobAdapter();
         binding.rvJobs.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvJobs.setAdapter(adapter);
         binding.rvJobs.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -90,7 +88,8 @@ public class PostJobFragment extends Fragment {
     }
 
     private void render(JobAdapter adapter, Resource<List<Dtos.JobItem>> resource) {
-        binding.progress.setVisibility(resource.state == Resource.State.LOADING ? View.VISIBLE : View.GONE);
+        boolean waiting = resource.state == Resource.State.LOADING && (resource.data == null || resource.data.isEmpty());
+        binding.progress.setVisibility(waiting ? View.VISIBLE : View.GONE);
         binding.refresh.setRefreshing(false);
         if (resource.data != null) adapter.submitList(resource.data);
         if (resource.state == Resource.State.ERROR) {

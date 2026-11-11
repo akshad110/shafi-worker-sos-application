@@ -529,11 +529,10 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
-        <ProgressBar
+        <com.example.shafi.ui.SkeletonView
             android:id="@+id/progress"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:layout_marginTop="12dp"
             android:visibility="gone" />
     </LinearLayout>

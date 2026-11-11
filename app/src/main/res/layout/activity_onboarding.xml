@@ -338,11 +338,10 @@
             android:layout_marginTop="8dp"
             android:text="Submit profile" />
 
-        <ProgressBar
+        <com.example.shafi.ui.SkeletonView
             android:id="@+id/progress"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
             android:layout_marginTop="8dp"
             android:visibility="gone" />
     </LinearLayout>

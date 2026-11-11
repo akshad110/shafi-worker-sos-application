@@ -24,9 +24,11 @@
         <activity android:name=".ui.screens.OnboardingActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ui.screens.OtpActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ui.screens.ShiftDetailActivity" android:exported="false" />
+        <activity android:name=".ui.screens.AttendanceActivity" android:exported="false" />
         <activity android:name=".ui.screens.PlacementActivity" android:exported="false" />
         <activity android:name=".ui.screens.ApplicationDetailActivity" android:exported="false" />
         <activity android:name=".ui.screens.JobDetailActivity" android:exported="false" />
+        <activity android:name=".ui.screens.ApplyActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".HelpActivity"
             android:exported="false"

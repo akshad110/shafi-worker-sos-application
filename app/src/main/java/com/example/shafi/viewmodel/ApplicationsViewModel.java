@@ -30,8 +30,14 @@ public class ApplicationsViewModel extends AndroidViewModel {
     }
 
     public void refresh() {
-        applications.setValue(Resource.loading());
+        if (applications.getValue() == null || applications.getValue().data == null) {
+            applications.setValue(Resource.loading());
+        }
         AppExecutors.IO.execute(() -> {
+            if (applications.getValue() == null || applications.getValue().data == null) {
+                List<Dtos.ApplicationItem> saved = repository.cachedApplications();
+                if (!saved.isEmpty()) applications.postValue(Resource.success(saved));
+            }
             try {
                 applications.postValue(Resource.success(repository.applications()));
             } catch (ApiException error) {
@@ -39,7 +45,7 @@ public class ApplicationsViewModel extends AndroidViewModel {
             } catch (IOException error) {
                 List<Dtos.ApplicationItem> cached = repository.cachedApplications();
                 if (!cached.isEmpty()) applications.postValue(Resource.offline(cached, "Showing saved applications"));
-                else applications.postValue(Resource.error("Can't reach Hospital SOS. Check your connection."));
+                else applications.postValue(Resource.error("Can't reach Shafi SOS. Check your connection."));
             }
         });
     }

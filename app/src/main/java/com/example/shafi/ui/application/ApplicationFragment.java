@@ -45,7 +45,8 @@ public class ApplicationFragment extends Fragment {
         binding.chipRejected.setOnClickListener(v -> choose(binding.chipRejected, "REJECTED", adapter));
         binding.chipWithdrawn.setOnClickListener(v -> choose(binding.chipWithdrawn, "WITHDRAWN", adapter));
         viewModel.applications().observe(getViewLifecycleOwner(), resource -> {
-            binding.progress.setVisibility(resource.state == Resource.State.LOADING ? View.VISIBLE : View.GONE);
+            boolean waiting = resource.state == Resource.State.LOADING && (resource.data == null || resource.data.isEmpty());
+            binding.progress.setVisibility(waiting ? View.VISIBLE : View.GONE);
             binding.refresh.setRefreshing(false);
             if (resource.data != null) all = resource.data;
             if (resource.state == Resource.State.ERROR && all.isEmpty()) {

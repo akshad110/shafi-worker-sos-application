@@ -30,8 +30,14 @@ public class ShiftsViewModel extends AndroidViewModel {
     }
 
     public void refresh() {
-        shifts.setValue(Resource.loading());
+        if (shifts.getValue() == null || shifts.getValue().data == null) {
+            shifts.setValue(Resource.loading());
+        }
         AppExecutors.IO.execute(() -> {
+            if (shifts.getValue() == null || shifts.getValue().data == null) {
+                List<Dtos.ShiftItem> saved = repository.cachedShifts();
+                if (!saved.isEmpty()) shifts.postValue(Resource.success(saved));
+            }
             try {
                 shifts.postValue(Resource.success(repository.shifts()));
             } catch (ApiException error) {
@@ -39,7 +45,7 @@ public class ShiftsViewModel extends AndroidViewModel {
             } catch (IOException error) {
                 List<Dtos.ShiftItem> cached = repository.cachedShifts();
                 if (!cached.isEmpty()) shifts.postValue(Resource.offline(cached, "Showing saved shifts"));
-                else shifts.postValue(Resource.error("Can't reach Hospital SOS. Check your connection."));
+                else shifts.postValue(Resource.error("Can't reach Shafi SOS. Check your connection."));
             }
         });
     }

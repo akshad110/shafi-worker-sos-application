@@ -10,6 +10,7 @@ import androidx.work.WorkManager;
 
 import com.example.shafi.core.SecureStore;
 import com.example.shafi.core.SyncWorker;
+import com.example.shafi.data.ApiClient;
 
 import java.util.concurrent.TimeUnit;
 
@@ -18,6 +19,7 @@ public class ShafiApp extends Application {
     public void onCreate() {
         super.onCreate();
         SecureStore.init(this);
+        ApiClient.warm();
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();

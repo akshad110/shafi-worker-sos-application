@@ -198,7 +198,13 @@ export async function findHospitalApplication(jobId: string, accountId: string) 
   return collection('applications').findOne({ jobId, workerId: { $in: workerIds } });
 }
 
-export async function createHospitalApplication(accountId: string, user: Doc, profile: Doc, job: Doc) {
+export async function createHospitalApplication(
+  accountId: string,
+  user: Doc,
+  profile: Doc,
+  job: Doc,
+  extra?: { note?: string; documents?: Doc[] },
+) {
   const workerId = await ensureHospitalWorker(accountId, job.hospitalId, user, profile);
   const duplicate = await collection('applications').findOne({ jobId: job.id, workerId });
   if (duplicate) throw new ApiError(409, 'You have already applied for this job', 'DUPLICATE_APPLICATION');
@@ -210,11 +216,19 @@ export async function createHospitalApplication(accountId: string, user: Doc, pr
     workerId,
     status: 'under_review',
     appliedAt: now,
-    timeline: [{ status: 'under_review', at: now, note: 'Applied from the worker app' }],
+    timeline: [{
+      status: 'under_review',
+      at: now,
+      note: extra?.note ? `Applied from the worker app. ${extra.note}` : 'Applied from the worker app',
+    }],
     notes: [],
+    documents: extra?.documents || [],
     sourceAccountId: accountId,
   };
   await collection('applications').insertOne(application);
+  if (extra?.documents?.length) {
+    await collection('workers').updateOne({ id: workerId }, { $set: { documents: extra.documents } });
+  }
   return application;
 }
 
@@ -261,23 +275,141 @@ export function presentApplication(application: Doc, job: Doc | null) {
   };
 }
 
-export function presentShift(shift: Doc, hospital?: { name: string; city: string }) {
+export function attendanceMark(shift: Doc): string {
+  const raw = shift.attendance;
+  const fromValue = (value: unknown): string => {
+    const text = String(value || '').toLowerCase();
+    if (text.includes('late')) return 'LATE';
+    if (text.includes('half')) return 'HALF';
+    if (text.includes('absent') || text === 'a') return 'ABSENT';
+    if (text.includes('present') || text === 'p') return 'PRESENT';
+    return '';
+  };
+  if (typeof raw === 'string') {
+    const mark = fromValue(raw);
+    if (mark) return mark;
+  }
+  if (Array.isArray(raw)) {
+    const row = raw.find((item) => item && item.date && item.date === shift.date) || raw[0];
+    if (row) {
+      const mark = fromValue(row.status || row.mark || row.value);
+      if (mark) return mark;
+    }
+  } else if (raw && typeof raw === 'object') {
+    const mark = fromValue(raw.status || raw.mark || raw.value);
+    if (mark) return mark;
+  }
   const status = String(shift.status || '').toLowerCase();
-  const mapped = status === 'active' ? 'ACTIVE' : status === 'upcoming' ? 'UPCOMING' : status === 'cancelled' ? 'CANCELLED' : 'COMPLETED';
+  if (status === 'cancelled' || status === 'canceled') return 'ABSENT';
+  if (shift.checkIn?.at) {
+    const at = new Date(shift.checkIn.at).getTime();
+    const start = shift.startAt ? new Date(shift.startAt).getTime() : 0;
+    if (start && at > start + 15 * 60 * 1000) return 'LATE';
+    return 'PRESENT';
+  }
+  return 'UNMARKED';
+}
+
+export function presentShift(shift: Doc, hospital?: { name: string; city: string }, job?: Doc | null) {
+  const status = String(shift.status || '').toLowerCase();
+  const mapped = status === 'active' ? 'ACTIVE' : status === 'upcoming' ? 'UPCOMING' : status === 'cancelled' || status === 'canceled' ? 'CANCELLED' : 'COMPLETED';
+  const hospitalName = hospital?.name || job?.hospitalName || 'Hospital';
+  const city = hospital?.city || job?.city || '';
+  const address = typeof shift.location === 'string' ? shift.location : (job?.address || '');
+  const shiftDate = shift.date || job?.shiftDate || '';
+  const startTime = shift.startTime || job?.startTime || '';
+  const endTime = shift.endTime || job?.endTime || '';
+  const department = shift.department || job?.department || '';
+  const role = shift.role || job?.healthcareRole || job?.title || 'Shift';
+  const fullMinor = job?.compensationMinor ?? Math.round((Number(shift.amount) || 0) * 100);
+  const mark = attendanceMark(shift);
+  const stored = storedPayMinor(shift);
+  const payment = paymentFor(fullMinor, mark, mapped, stored);
   return {
     id: shift.id,
-    hospitalName: hospital?.name || 'Hospital',
-    department: shift.department || '',
-    city: hospital?.city || '',
-    address: typeof shift.location === 'string' ? shift.location : '',
-    shiftDate: shift.date || '',
-    startTime: shift.startTime || '',
-    endTime: shift.endTime || '',
     status: mapped,
-    attendance: shift.attendance || null,
-    supervisor: shift.supervisor || '',
-    compensationMinor: Math.round((Number(shift.amount) || 0) * 100),
+    attendanceMark: mark,
+    hospitalName,
+    department,
+    city,
+    address,
+    shiftDate,
+    startTime,
+    endTime,
+    compensationMinor: fullMinor,
     currency: 'INR',
-    paymentUnit: payUnit(shift.paymentUnit),
+    paymentUnit: payUnit(shift.paymentUnit || job?.paymentUnit),
+    job: {
+      id: job?.id || shift.jobId || '',
+      title: job?.title || role,
+      hospitalName,
+      healthcareRole: role,
+      department,
+      city,
+      address,
+      shiftDate,
+      startTime,
+      endTime,
+      compensationMinor: fullMinor,
+      currency: 'INR',
+      paymentUnit: payUnit(shift.paymentUnit || job?.paymentUnit),
+    },
+    payment,
   };
+}
+
+function storedPayMinor(shift: Doc): number | null {
+  const raw = shift.attendance;
+  const direct = [shift.paidAmountMinor, shift.paymentAmountMinor, raw?.amountMinor];
+  for (const value of direct) {
+    if (typeof value === 'number' && !Number.isNaN(value)) return Math.round(value);
+  }
+  const rupees = [shift.paidAmount, shift.paymentAmount, raw?.amount, raw?.pay];
+  for (const value of rupees) {
+    if (typeof value === 'number' && !Number.isNaN(value)) return Math.round(value * 100);
+  }
+  return null;
+}
+
+export function paymentFor(fullMinor: number, mark: string, status: string, stored: number | null) {
+  const waiting = (status === 'UPCOMING' || status === 'ACTIVE') && (!mark || mark === 'UNMARKED');
+  if (waiting) {
+    return {
+      recorded: false,
+      amountMinor: 0,
+      currency: 'INR',
+      status: 'NOT_RECORDED',
+      note: 'Payment is recorded after the hospital marks attendance.',
+    };
+  }
+  const amount = stored != null ? stored : shareOf(fullMinor, mark);
+  let note = 'Present, so the full shift pay is recorded.';
+  if (mark === 'ABSENT') note = 'Absent, so no payment. ₹0.';
+  else if (mark === 'HALF') note = 'Half day, so half the shift pay is recorded.';
+  else if (mark === 'LATE') note = 'Late, so 75% of the shift pay is recorded.';
+  else if (mark === 'UNMARKED') note = 'The shift is complete. Attendance is not marked yet.';
+  if (stored != null) note = `${note} The hospital stored this amount.`;
+  return {
+    recorded: mark !== 'UNMARKED',
+    amountMinor: amount,
+    currency: 'INR',
+    status: amount === 0 ? 'NO_PAY' : 'RECORDED',
+    note,
+  };
+}
+
+function shareOf(fullMinor: number, mark: string): number {
+  if (mark === 'ABSENT') return 0;
+  if (mark === 'HALF') return Math.round(fullMinor / 2);
+  if (mark === 'LATE') return Math.round(fullMinor * 0.75);
+  if (mark === 'PRESENT') return fullMinor;
+  return 0;
+}
+
+export async function presentedHospitalShift(accountId: string, shiftId: string) {
+  const shifts = await hospitalShiftsFor(accountId);
+  const shift = shifts.find((item) => item.id === shiftId);
+  if (!shift) return null;
+  const place = shift.jobId ? await loadHospitalJob(String(shift.jobId)) : null;
+  return presentShift(shift, place ? { name: place.hospitalName, city: place.city } : undefined, place);
 }

@@ -113,10 +113,12 @@ public final class Dtos {
     public static class PaymentInfo {
         public String id;
         public String status;
+        public boolean recorded;
         public long amountMinor;
         public String currency;
         public String paidAt;
         public String reference;
+        public String note;
         public String title;
         public String hospitalName;
         public String shiftDate;
@@ -139,6 +141,18 @@ public final class Dtos {
         public String feedbackComment;
         public PaymentInfo payment;
         public JobItem job;
+        public String attendanceMark;
+        public Object attendance;
+        public double amount;
+        public String hospitalName;
+        public String department;
+        public String shiftDate;
+        public String startTime;
+        public String endTime;
+        public long compensationMinor;
+        public String currency;
+        public String address;
+        public String city;
     }
 
     public static class Dashboard {

@@ -114,7 +114,13 @@ public class WorkerRepository {
     }
 
     public Dtos.ApplicationItem apply(String jobId) throws IOException, ApiException {
-        return unwrap(api.apply(jobId, new HashMap<>()).execute());
+        return apply(jobId, "");
+    }
+
+    public Dtos.ApplicationItem apply(String jobId, String note) throws IOException, ApiException {
+        Map<String, Object> body = new HashMap<>();
+        if (note != null && !note.trim().isEmpty()) body.put("note", note.trim());
+        return unwrap(api.apply(jobId, body).execute());
     }
 
     public List<Dtos.ApplicationItem> applications() throws IOException, ApiException {

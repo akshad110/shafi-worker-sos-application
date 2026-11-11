@@ -24,7 +24,7 @@
         <ImageView
             android:layout_width="64dp"
             android:layout_height="64dp"
-            android:contentDescription="Hospital SOS"
+            android:contentDescription="Shafi SOS"
             android:scaleType="fitCenter"
             android:src="@drawable/sos_logo" />
 
@@ -34,7 +34,7 @@
             android:layout_marginTop="16dp"
             android:fontFamily="sans-serif-medium"
             android:letterSpacing="-0.02"
-            android:text="Hospital SOS"
+            android:text="Shafi SOS"
             android:textColor="@color/text_primary"
             android:textSize="28sp" />
 
@@ -139,7 +139,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="New to Hospital SOS? "
+                android:text="New to Shafi SOS? "
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 

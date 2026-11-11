@@ -43,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="Hospital SOS"
+                android:text="Shafi SOS"
                 android:textColor="@color/navy"
                 android:textSize="17sp"
                 android:textStyle="bold" />

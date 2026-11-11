@@ -14,7 +14,7 @@ import { accessUrl, readLocalObject, savePrivateObject } from './storage';
 import { notify, queueWhatsApp } from './notify';
 import {
   createHospitalApplication, findHospitalApplication, hospitalApplicationsFor, hospitalShiftsFor,
-  loadHospitalJob, loadPublishedJobs, presentApplication, presentShift, toAppStatus,
+  loadHospitalJob, loadPublishedJobs, paymentFor, presentApplication, presentShift, presentedHospitalShift, toAppStatus,
 } from './hospital-data';
 
 function escapeRegex(value: string) {
@@ -339,14 +339,25 @@ async function applicationView(application: any) {
   };
 }
 
-export async function applyToJob(workerId: string, jobId: string) {
+export async function applyToJob(workerId: string, jobId: string, note?: string) {
   const { user, profile } = await loadWorker(workerId);
   if (!canApply(user, profile)) {
     throw new ApiError(403, 'Complete your profile before applying', 'PROFILE_INCOMPLETE');
   }
   const sharedRaw = await loadHospitalJob(jobId);
   if (sharedRaw) {
-    const application = await createHospitalApplication(workerId, user, profile, sharedRaw);
+    const files = await WorkerDocument.find({ workerId }).sort({ createdAt: -1 }).limit(8);
+    const application = await createHospitalApplication(workerId, user, profile, sharedRaw, {
+      note: note?.trim(),
+      documents: files.map((file) => ({
+        id: file.id,
+        type: file.type,
+        fileName: file.fileName,
+        mimeType: file.mimeType,
+        status: file.status,
+        storageKey: file.storageKey,
+      })),
+    });
     const view = presentApplication(application, sharedRaw);
     await notify({
       userId: workerId,
@@ -667,6 +678,12 @@ export async function declinePlacement(placementId: string, workerId: string) {
 async function shiftView(shift: any) {
   const job = await Job.findById(shift.jobId);
   const payment = await Payment.findOne({ shiftId: shift._id });
+  const attendanceMark = shift.status === 'CANCELLED'
+    ? 'ABSENT'
+    : shift.checkIn?.at
+      ? (shift.startAt && new Date(shift.checkIn.at).getTime() > new Date(shift.startAt).getTime() + 15 * 60 * 1000 ? 'LATE' : 'PRESENT')
+      : 'UNMARKED';
+  const pay = paymentFor(job?.compensationMinor || 0, attendanceMark, shift.status, payment ? payment.amountMinor : null);
   return {
     id: shift.id,
     status: shift.status,
@@ -677,14 +694,13 @@ async function shiftView(shift: any) {
     feedbackRating: shift.feedbackRating || null,
     feedbackComment: shift.feedbackComment || '',
     incidents: shift.incidents || [],
-    payment: payment ? {
-      id: payment.id,
-      status: payment.status,
-      amountMinor: payment.amountMinor,
-      currency: payment.currency,
-      paidAt: payment.paidAt,
-      reference: payment.reference,
-    } : null,
+    attendanceMark,
+    payment: {
+      ...pay,
+      id: payment?.id,
+      paidAt: payment?.paidAt,
+      reference: payment?.reference,
+    },
     job: job ? {
       ...jobDetail(job),
       supervisorName: job.supervisorName,
@@ -698,7 +714,7 @@ export async function listMyShifts(workerId: string, status?: string) {
   const sharedViews = [];
   for (const shift of shared) {
     const place = shift.hospitalId ? await loadHospitalJob(String(shift.jobId || '')) : null;
-    const view = presentShift(shift, place ? { name: place.hospitalName, city: place.city } : undefined);
+    const view = presentShift(shift, place ? { name: place.hospitalName, city: place.city } : undefined, place);
     if (!place && shift.hospitalId) {
       const hospital = await mongoose.connection.db?.collection('hospitals').findOne({ id: shift.hospitalId });
       if (hospital) {
@@ -716,6 +732,11 @@ export async function listMyShifts(workerId: string, status?: string) {
 }
 
 export async function getShift(shiftId: string, workerId: string) {
+  if (!mongoose.isValidObjectId(shiftId)) {
+    const shared = await presentedHospitalShift(workerId, shiftId);
+    if (!shared) throw new ApiError(404, 'Shift not found', 'NOT_FOUND');
+    return shared;
+  }
   const shift = await Shift.findById(shiftId);
   if (!shift || String(shift.workerId) !== workerId) throw new ApiError(404, 'Shift not found', 'NOT_FOUND');
   return shiftView(shift);

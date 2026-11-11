@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.example.shafi.BuildConfig;
+import com.example.shafi.core.AppExecutors;
 import com.example.shafi.core.SecureStore;
 import com.example.shafi.core.SessionBus;
 import com.google.gson.Gson;
@@ -36,13 +37,13 @@ public final class ApiClient {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(BuildConfig.DEBUG ? HttpLoggingInterceptor.Level.BASIC : HttpLoggingInterceptor.Level.NONE);
             OkHttpClient refreshClient = new OkHttpClient.Builder()
-                    .connectTimeout(20, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
                     .build();
             http = new OkHttpClient.Builder()
-                    .connectTimeout(20, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
-                    .writeTimeout(40, TimeUnit.SECONDS)
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .writeTimeout(60, TimeUnit.SECONDS)
                     .addInterceptor(logging)
                     .addInterceptor(chain -> {
                         Request request = chain.request();
@@ -68,6 +69,23 @@ public final class ApiClient {
     public static OkHttpClient http() {
         service();
         return http;
+    }
+
+    public static void warm() {
+        AppExecutors.IO.execute(() -> {
+            try {
+                service();
+                String base = BuildConfig.API_BASE_URL;
+                int marker = base.indexOf("/api/v1/");
+                String origin = marker > 0 ? base.substring(0, marker) : base;
+                Request request = new Request.Builder().url(origin + "/health").get().build();
+                try (Response response = http.newCall(request).execute()) {
+                    response.close();
+                }
+            } catch (Exception ignored) {
+                // A cold host can wake in the background. The screens still load on their own.
+            }
+        });
     }
 
     public static String absolute(String url) {

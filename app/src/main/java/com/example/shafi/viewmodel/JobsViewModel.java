@@ -44,7 +44,6 @@ public class JobsViewModel extends AndroidViewModel {
         this.urgentOnly = urgentOnly;
         this.sort = sort == null ? "newest" : sort;
         page = 1;
-        loaded.clear();
         fetch(true);
     }
 
@@ -56,8 +55,12 @@ public class JobsViewModel extends AndroidViewModel {
 
     private void fetch(boolean replace) {
         loading = true;
-        if (replace) jobs.setValue(Resource.loading());
+        if (replace && loaded.isEmpty()) jobs.setValue(Resource.loading());
         AppExecutors.IO.execute(() -> {
+            if (replace && loaded.isEmpty() && query.isEmpty() && shiftType.isEmpty() && !urgentOnly) {
+                List<Dtos.JobItem> saved = repository.cachedJobs();
+                if (!saved.isEmpty()) jobs.postValue(Resource.success(saved));
+            }
             try {
                 Dtos.JobPage result = repository.jobs(query, shiftType, urgentOnly, sort, page);
                 List<Dtos.JobItem> items = result == null || result.items == null ? new ArrayList<>() : result.items;
@@ -72,7 +75,7 @@ public class JobsViewModel extends AndroidViewModel {
                 if (!cached.isEmpty() && replace) {
                     jobs.postValue(Resource.offline(cached, "Showing saved jobs"));
                 } else {
-                    jobs.postValue(Resource.error("Can't reach Hospital SOS. Check your connection."));
+                    jobs.postValue(Resource.error("Can't reach Shafi SOS. Check your connection."));
                 }
             } finally {
                 loading = false;

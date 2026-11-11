@@ -83,7 +83,10 @@
         <item name="android:minHeight">50dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
-        <item name="backgroundTint">@color/navy_action</item>
+        <item name="android:textColor">@color/button_text</item>
+        <item name="backgroundTint">@color/button_fill</item>
+        <item name="rippleColor">#66FFFFFF</item>
+        <item name="iconTint">@color/button_text</item>
     </style>
 
     <style name="Widget.Shafi.Button.Outlined" parent="Widget.MaterialComponents.Button.OutlinedButton">
@@ -92,10 +95,12 @@
         <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:textSize">15sp</item>
-        <item name="android:textColor">@color/navy_action</item>
+        <item name="android:textColor">@color/button_text_navy</item>
         <item name="android:minHeight">50dp</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
+        <item name="backgroundTint">@color/button_outline_fill</item>
+        <item name="rippleColor">#33243F91</item>
         <item name="strokeColor">@color/navy_action</item>
         <item name="strokeWidth">1.5dp</item>
     </style>

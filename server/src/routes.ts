@@ -177,7 +177,10 @@ api.get('/jobs/:jobId', requireAuth, async (req, res, next) => {
 });
 
 api.post('/jobs/:jobId/applications', requireAuth, requireRole('WORKER'), async (req, res, next) => {
-  try { send(res, 'Application submitted successfully', await staffing.applyToJob(req.auth!.id, pid(req.params.jobId)), 201); } catch (error) { next(error); }
+  try {
+    const note = typeof req.body?.note === 'string' ? req.body.note.slice(0, 280) : '';
+    send(res, 'Application submitted successfully', await staffing.applyToJob(req.auth!.id, pid(req.params.jobId), note), 201);
+  } catch (error) { next(error); }
 });
 
 api.get('/workers/me/applications', requireAuth, requireRole('WORKER'), async (req, res, next) => {

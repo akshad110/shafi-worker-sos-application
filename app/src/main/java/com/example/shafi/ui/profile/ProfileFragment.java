@@ -60,7 +60,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void render(Resource<Dtos.ProfileResponse> resource) {
-        binding.progress.setVisibility(resource.state == Resource.State.LOADING ? View.VISIBLE : View.GONE);
+        binding.progress.setVisibility(resource.state == Resource.State.LOADING && resource.data == null ? View.VISIBLE : View.GONE);
         if (resource.state == Resource.State.ERROR) {
             binding.tvError.setText(resource.message);
             binding.tvError.setVisibility(View.VISIBLE);

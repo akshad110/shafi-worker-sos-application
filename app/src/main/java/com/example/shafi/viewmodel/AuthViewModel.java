@@ -54,7 +54,7 @@ public class AuthViewModel extends AndroidViewModel {
         } catch (ApiException error) {
             result.postValue(Resource.error(error.getMessage()));
         } catch (IOException error) {
-            result.postValue(Resource.error("Can't reach Hospital SOS. Start the server and check the API address."));
+            result.postValue(Resource.error("Can't reach Shafi SOS. Start the server and check the API address."));
         }
     }
 

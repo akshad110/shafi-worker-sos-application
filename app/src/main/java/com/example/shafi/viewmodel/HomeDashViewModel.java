@@ -34,8 +34,14 @@ public class HomeDashViewModel extends AndroidViewModel {
     }
 
     public void refresh() {
-        dashboard.setValue(Resource.loading());
+        if (dashboard.getValue() == null || dashboard.getValue().data == null) {
+            dashboard.setValue(Resource.loading());
+        }
         AppExecutors.IO.execute(() -> {
+            if (dashboard.getValue() == null || dashboard.getValue().data == null) {
+                Dtos.Dashboard saved = repository.cachedDashboard();
+                if (saved != null) dashboard.postValue(Resource.success(saved));
+            }
             try {
                 Dtos.Dashboard data = repository.dashboard();
                 dashboard.postValue(Resource.success(data));
@@ -48,7 +54,7 @@ public class HomeDashViewModel extends AndroidViewModel {
                 if (cached != null) {
                     dashboard.postValue(Resource.offline(cached, "Showing saved dashboard"));
                 } else {
-                    dashboard.postValue(Resource.error("Can't reach Hospital SOS. Check your connection."));
+                    dashboard.postValue(Resource.error("Can't reach Shafi SOS. Check your connection."));
                 }
             }
         });

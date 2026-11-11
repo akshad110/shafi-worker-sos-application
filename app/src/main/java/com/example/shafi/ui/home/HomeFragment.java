@@ -18,7 +18,6 @@ import com.example.shafi.databinding.FragmentHomeBinding;
 import com.example.shafi.ui.ActivityAdapter;
 import com.example.shafi.ui.JobAdapter;
 import com.example.shafi.ui.Routes;
-import com.example.shafi.ui.screens.JobDetailActivity;
 import com.example.shafi.ui.screens.OnboardingActivity;
 import com.example.shafi.ui.screens.ShiftDetailActivity;
 import com.example.shafi.viewmodel.HomeDashViewModel;
@@ -33,7 +32,7 @@ public class HomeFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         viewModel = new ViewModelProvider(requireActivity()).get(HomeDashViewModel.class);
-        jobs = new JobAdapter(job -> startActivity(new Intent(requireContext(), JobDetailActivity.class).putExtra("id", job.id)));
+        jobs = new JobAdapter();
         activity = new ActivityAdapter(item -> Routes.open(requireContext(), item.data));
         binding.rvJobs.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvActivity.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -59,7 +58,7 @@ public class HomeFragment extends Fragment {
     }
 
     private void render(Resource<Dtos.Dashboard> resource) {
-        boolean loading = resource.state == Resource.State.LOADING;
+        boolean loading = resource.state == Resource.State.LOADING && resource.data == null;
         binding.progress.setVisibility(loading ? View.VISIBLE : View.GONE);
         binding.refresh.setRefreshing(false);
         if (resource.state == Resource.State.ERROR) {
