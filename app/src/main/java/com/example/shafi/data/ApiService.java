@@ -99,6 +99,12 @@ public interface ApiService {
     @PATCH("notifications/read-all")
     Call<Dtos.Envelope<Object>> markAll(@Body Map<String, Object> body);
 
+    @GET("workers/me/reviews")
+    Call<Dtos.Envelope<Dtos.ReviewPage>> reviews();
+
+    @POST("workers/me/reviews")
+    Call<Dtos.Envelope<Dtos.ReviewPage>> addReview(@Body Map<String, Object> body);
+
     @GET("workers/me/earnings")
     Call<Dtos.Envelope<Dtos.Earnings>> earnings();
 

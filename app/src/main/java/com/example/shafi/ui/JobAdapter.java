@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -123,17 +124,16 @@ public class JobAdapter extends ListAdapter<Dtos.JobItem, JobAdapter.Holder> {
         }
         row(sheetBinding.rowWhere, R.drawable.ic_home_black_24dp, "Where", where);
         row(sheetBinding.rowPay, R.drawable.ic_earnings, "Pay", Format.money(item.compensationMinor, item.currency) + " " + Format.payUnit(item.paymentUnit));
-        String extra = Format.block("Vacancies", item.vacancies == 0 ? "" : item.filledCount + " filled of " + item.vacancies)
-                + Format.block("Deadline", item.deadline)
-                + Format.block("Description", item.description)
-                + Format.block("Reporting", item.reportingInstructions)
-                + Format.bullets("Qualifications", item.qualifications)
-                + Format.bullets("Skills", item.skills)
-                + Format.bullets("Certifications", item.certifications)
-                + Format.block("Experience", item.experienceYears == null || item.experienceYears == 0 ? "" : item.experienceYears + " years");
-        String text = extra.trim();
-        sheetBinding.tvExtra.setVisibility(text.isEmpty() ? View.GONE : View.VISIBLE);
-        sheetBinding.tvExtra.setText(text);
+        sheetBinding.extraBox.removeAllViews();
+        addSection("Vacancies", item.vacancies == 0 ? "" : item.filledCount + " filled of " + item.vacancies);
+        addSection("Deadline", item.deadline);
+        addSection("Description", item.description);
+        addSection("Reporting", item.reportingInstructions);
+        addSection("Qualifications", bullets(item.qualifications));
+        addSection("Skills", bullets(item.skills));
+        addSection("Certifications", bullets(item.certifications));
+        addSection("Experience", item.experienceYears == null || item.experienceYears == 0 ? "" : item.experienceYears + " years");
+        sheetBinding.extraBox.setVisibility(sheetBinding.extraBox.getChildCount() == 0 ? View.GONE : View.VISIBLE);
         String failure = errors.get(item.id);
         boolean failed = failure != null && !ready;
         sheetBinding.progress.setVisibility(!ready && !failed ? View.VISIBLE : View.GONE);
@@ -157,6 +157,26 @@ public class JobAdapter extends ListAdapter<Dtos.JobItem, JobAdapter.Holder> {
             sheetBinding.btnApply.setEnabled(true);
         }
         capScroll();
+    }
+
+    private void addSection(String label, String value) {
+        if (sheetBinding == null || value == null || value.trim().isEmpty()) return;
+        View section = LayoutInflater.from(sheetBinding.getRoot().getContext())
+                .inflate(R.layout.block_section, sheetBinding.extraBox, false);
+        ((TextView) section.findViewById(R.id.tv_label)).setText(label);
+        ((TextView) section.findViewById(R.id.tv_value)).setText(value.trim());
+        sheetBinding.extraBox.addView(section);
+    }
+
+    private String bullets(java.util.List<String> values) {
+        if (values == null || values.isEmpty()) return "";
+        StringBuilder builder = new StringBuilder();
+        for (String value : values) {
+            if (value == null || value.trim().isEmpty()) continue;
+            if (builder.length() > 0) builder.append('\n');
+            builder.append("• ").append(value.trim());
+        }
+        return builder.toString();
     }
 
     private void row(RowDetailBinding row, int icon, String label, String value) {

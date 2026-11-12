@@ -55,7 +55,8 @@ public class ShiftsFragment extends Fragment {
         binding.rvItems.setAdapter(adapter);
         binding.rvDays.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
         binding.rvDays.setAdapter(days);
-        binding.refresh.setOnRefreshListener(() -> viewModel.refresh());
+        binding.refresh.setOnRefreshListener(() -> viewModel.refresh(true));
+        binding.rvItems.setItemAnimator(null);
         binding.btnAttendance.setOnClickListener(v -> startActivity(new Intent(requireContext(), AttendanceActivity.class)));
         binding.btnDayPrev.setOnClickListener(v -> binding.rvDays.smoothScrollBy(-dp(220), 0));
         binding.btnDayNext.setOnClickListener(v -> binding.rvDays.smoothScrollBy(dp(220), 0));

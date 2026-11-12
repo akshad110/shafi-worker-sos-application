@@ -19,6 +19,8 @@ public class HomeDashViewModel extends AndroidViewModel {
     private final WorkerRepository repository;
     private final MutableLiveData<Resource<Dtos.Dashboard>> dashboard = new MutableLiveData<>();
     private final MutableLiveData<Integer> unread = new MutableLiveData<>(0);
+    private long loadedAt;
+    private boolean busy;
 
     public HomeDashViewModel(@NonNull Application application) {
         super(application);
@@ -34,28 +36,40 @@ public class HomeDashViewModel extends AndroidViewModel {
     }
 
     public void refresh() {
-        if (dashboard.getValue() == null || dashboard.getValue().data == null) {
-            dashboard.setValue(Resource.loading());
-        }
+        refresh(false);
+    }
+
+    public void refresh(boolean force) {
+        if (!force && loadedAt > 0 && System.currentTimeMillis() - loadedAt < 20_000) return;
+        if (busy) return;
+        busy = true;
         AppExecutors.IO.execute(() -> {
-            if (dashboard.getValue() == null || dashboard.getValue().data == null) {
-                Dtos.Dashboard saved = repository.cachedDashboard();
-                if (saved != null) dashboard.postValue(Resource.success(saved));
-            }
             try {
+                Resource<Dtos.Dashboard> current = dashboard.getValue();
+                if (current == null || current.data == null) {
+                    Dtos.Dashboard saved = repository.cachedDashboard();
+                    if (saved != null) dashboard.postValue(Resource.success(saved));
+                    else dashboard.postValue(Resource.loading());
+                }
                 Dtos.Dashboard data = repository.dashboard();
                 dashboard.postValue(Resource.success(data));
+                loadedAt = System.currentTimeMillis();
                 Dtos.NoticePage notices = repository.notifications();
                 unread.postValue(notices == null ? 0 : notices.unread);
             } catch (ApiException error) {
-                dashboard.postValue(Resource.error(error.getMessage()));
+                if (dashboard.getValue() == null || dashboard.getValue().data == null) {
+                    dashboard.postValue(Resource.error(error.getMessage()));
+                }
             } catch (IOException error) {
                 Dtos.Dashboard cached = repository.cachedDashboard();
                 if (cached != null) {
                     dashboard.postValue(Resource.offline(cached, "Showing saved dashboard"));
-                } else {
+                    loadedAt = System.currentTimeMillis();
+                } else if (dashboard.getValue() == null || dashboard.getValue().data == null) {
                     dashboard.postValue(Resource.error("Can't reach Shafi SOS. Check your connection."));
                 }
+            } finally {
+                busy = false;
             }
         });
     }

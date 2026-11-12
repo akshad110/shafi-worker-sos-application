@@ -37,7 +37,8 @@ public class ApplicationFragment extends Fragment {
                 startActivity(new Intent(requireContext(), ApplicationDetailActivity.class).putExtra("id", item.id)));
         binding.rvItems.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvItems.setAdapter(adapter);
-        binding.refresh.setOnRefreshListener(() -> viewModel.refresh());
+        binding.refresh.setOnRefreshListener(() -> viewModel.refresh(true));
+        binding.rvItems.setItemAnimator(null);
         binding.chipAll.setOnClickListener(v -> choose(binding.chipAll, "ALL", adapter));
         binding.chipReview.setOnClickListener(v -> choose(binding.chipReview, "REVIEW", adapter));
         binding.chipShort.setOnClickListener(v -> choose(binding.chipShort, "SHORTLISTED", adapter));

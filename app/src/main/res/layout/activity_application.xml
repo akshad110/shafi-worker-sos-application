@@ -101,16 +101,16 @@
             android:textSize="16sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tv_history"
+        <LinearLayout
+            android:id="@+id/history_box"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:background="@drawable/bg_card"
-            android:lineSpacingExtra="6dp"
-            android:padding="16dp"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp" />
+            android:divider="@drawable/divider_line"
+            android:dividerPadding="14dp"
+            android:orientation="vertical"
+            android:showDividers="middle" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_primary"

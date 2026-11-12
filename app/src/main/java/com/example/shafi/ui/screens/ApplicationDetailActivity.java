@@ -2,7 +2,9 @@ package com.example.shafi.ui.screens;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -55,16 +57,15 @@ public class ApplicationDetailActivity extends AppCompatActivity {
         row(binding.rowShift, R.drawable.ic_calendar, "Shift", job == null ? "" : Format.shift(Format.prettyDate(job.shiftDate), job.startTime, job.endTime));
         row(binding.rowPay, R.drawable.ic_earnings, "Pay", job == null ? "" : Format.money(job.compensationMinor, job.currency) + " " + Format.payUnit(job.paymentUnit));
         row(binding.rowUpdated, R.drawable.ic_edit, "Updated", Format.prettyStamp(loaded.updatedAt));
-        StringBuilder history = new StringBuilder();
-        if (loaded.history != null) {
+        binding.historyBox.removeAllViews();
+        LayoutInflater inflater = LayoutInflater.from(this);
+        if (loaded.history == null || loaded.history.isEmpty()) {
+            addHistory(inflater, "No updates yet", "", "");
+        } else {
             for (Dtos.HistoryItem step : loaded.history) {
-                if (history.length() > 0) history.append("\n\n");
-                history.append(Format.status(step.status));
-                if (step.at != null && !step.at.isEmpty()) history.append("  ·  ").append(Format.prettyStamp(step.at));
-                if (step.note != null && !step.note.isEmpty()) history.append("\n").append(step.note);
+                addHistory(inflater, Format.status(step.status), Format.prettyStamp(step.at), step.note);
             }
         }
-        binding.tvHistory.setText(history.length() == 0 ? "No updates yet." : history.toString());
         boolean offered = "OFFERED".equals(loaded.status) && loaded.placementId != null;
         binding.btnPrimary.setVisibility(offered ? View.VISIBLE : View.GONE);
         binding.btnPrimary.setText("Review offer");
@@ -86,6 +87,24 @@ public class ApplicationDetailActivity extends AppCompatActivity {
                         }
                     });
                 }));
+    }
+
+    private void addHistory(LayoutInflater inflater, String status, String when, String note) {
+        View row = inflater.inflate(R.layout.block_history, binding.historyBox, false);
+        ((TextView) row.findViewById(R.id.tv_status)).setText(status == null || status.isEmpty() ? "Update" : status);
+        TextView time = row.findViewById(R.id.tv_when);
+        if (when == null || when.trim().isEmpty()) {
+            time.setVisibility(View.GONE);
+        } else {
+            time.setText(when.trim());
+        }
+        TextView body = row.findViewById(R.id.tv_note);
+        if (note == null || note.trim().isEmpty()) {
+            body.setVisibility(View.GONE);
+        } else {
+            body.setText(note.trim());
+        }
+        binding.historyBox.addView(row);
     }
 
     private void row(RowDetailBinding row, int icon, String label, String value) {

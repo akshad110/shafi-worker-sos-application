@@ -26,6 +26,7 @@ import com.example.shafi.databinding.FragmentProfileBinding;
 import com.example.shafi.ui.screens.DocumentsActivity;
 import com.example.shafi.ui.screens.EarningsActivity;
 import com.example.shafi.ui.screens.OnboardingActivity;
+import com.example.shafi.ui.screens.ReviewsActivity;
 import com.example.shafi.viewmodel.ProfileViewModel;
 
 import java.util.HashMap;
@@ -43,6 +44,7 @@ public class ProfileFragment extends Fragment {
         binding.btnEdit.setOnClickListener(v -> showEdit());
         binding.btnDocuments.setOnClickListener(v -> startActivity(new Intent(requireContext(), DocumentsActivity.class)));
         binding.btnEarnings.setOnClickListener(v -> startActivity(new Intent(requireContext(), EarningsActivity.class)));
+        binding.btnReviews.setOnClickListener(v -> startActivity(new Intent(requireContext(), ReviewsActivity.class)));
         binding.btnAvailability.setOnClickListener(v -> startActivity(new Intent(requireContext(), OnboardingActivity.class)));
         binding.btnSettings.setOnClickListener(v -> startActivity(new Intent(requireContext(), SettingActivity.class)));
         binding.btnHelp.setOnClickListener(v -> startActivity(new Intent(requireContext(), HelpActivity.class)));

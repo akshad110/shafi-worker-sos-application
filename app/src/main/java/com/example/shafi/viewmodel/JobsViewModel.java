@@ -28,6 +28,8 @@ public class JobsViewModel extends AndroidViewModel {
     private int page = 1;
     private boolean hasMore;
     private boolean loading;
+    private long loadedAt;
+    private String loadedKey = "";
 
     public JobsViewModel(@NonNull Application application) {
         super(application);
@@ -39,10 +41,16 @@ public class JobsViewModel extends AndroidViewModel {
     }
 
     public void search(String query, String shiftType, boolean urgentOnly, String sort) {
+        search(query, shiftType, urgentOnly, sort, false);
+    }
+
+    public void search(String query, String shiftType, boolean urgentOnly, String sort, boolean force) {
         this.query = query == null ? "" : query.trim();
         this.shiftType = shiftType == null ? "" : shiftType;
         this.urgentOnly = urgentOnly;
         this.sort = sort == null ? "newest" : sort;
+        String key = this.query + "|" + this.shiftType + "|" + this.urgentOnly + "|" + this.sort;
+        if (!force && key.equals(loadedKey) && !loaded.isEmpty() && System.currentTimeMillis() - loadedAt < 20_000) return;
         page = 1;
         fetch(true);
     }
@@ -67,6 +75,10 @@ public class JobsViewModel extends AndroidViewModel {
                 if (replace) loaded.clear();
                 loaded.addAll(items);
                 hasMore = result != null && result.hasMore;
+                if (replace) {
+                    loadedAt = System.currentTimeMillis();
+                    loadedKey = this.query + "|" + this.shiftType + "|" + this.urgentOnly + "|" + this.sort;
+                }
                 jobs.postValue(Resource.success(new ArrayList<>(loaded)));
             } catch (ApiException error) {
                 jobs.postValue(Resource.error(error.getMessage()));

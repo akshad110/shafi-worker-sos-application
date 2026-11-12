@@ -18,8 +18,10 @@ public class SyncWorker extends Worker {
     public Result doWork() {
         if (SecureStore.access() == null) return Result.success();
         try {
-            new WorkerRepository(getApplicationContext()).jobs("", "", false, "newest", 1);
-            new WorkerRepository(getApplicationContext()).applications();
+            WorkerRepository repository = new WorkerRepository(getApplicationContext());
+            repository.jobs("", "", false, "newest", 1);
+            repository.applications();
+            ShiftAlerts.publish(getApplicationContext(), repository.notifications());
             return Result.success();
         } catch (Exception error) {
             return Result.retry();

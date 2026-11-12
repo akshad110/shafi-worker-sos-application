@@ -9,13 +9,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class splash extends AppCompatActivity {
 
-    private static final int SPLASH_TIME_OUT = 1000; // 1 Seconds delay
+    private static final int SPLASH_TIME_OUT = 900;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
-        SystemBars.apply(this);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().hide();

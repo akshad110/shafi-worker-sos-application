@@ -215,6 +215,18 @@ public class WorkerRepository {
         unwrap(api.markAll(new HashMap<>()).execute());
     }
 
+    public Dtos.ReviewPage reviews() throws IOException, ApiException {
+        return unwrap(api.reviews().execute());
+    }
+
+    public Dtos.ReviewPage addReview(String shiftId, int rating, String message) throws IOException, ApiException {
+        Map<String, Object> body = new HashMap<>();
+        body.put("shiftId", shiftId);
+        body.put("rating", rating);
+        body.put("message", message == null ? "" : message);
+        return unwrap(api.addReview(body).execute());
+    }
+
     public Dtos.Earnings earnings() throws IOException, ApiException {
         return unwrap(api.earnings().execute());
     }

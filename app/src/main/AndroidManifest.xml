@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -19,6 +20,7 @@
         android:theme="@style/Theme.Shafi"
         tools:targetApi="31">
         <activity android:name=".ui.screens.DocumentsActivity" android:exported="false" />
+        <activity android:name=".ui.screens.ReviewsActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ui.screens.EarningsActivity" android:exported="false" />
         <activity android:name=".ui.screens.NotificationsActivity" android:exported="false" />
         <activity android:name=".ui.screens.OnboardingActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
@@ -46,17 +48,17 @@
             android:exported="false" />
         <activity
             android:name=".login"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".splash"
             android:exported="true"
-            android:theme="@style/Theme.App.Starting"
-            android:windowSoftInputMode="adjustResize">
+            android:theme="@style/Theme.Shafi.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".splash"
-            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

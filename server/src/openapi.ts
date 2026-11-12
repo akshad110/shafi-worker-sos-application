@@ -38,6 +38,8 @@ export const openApiSpec = {
     '/workers/me/placements': { get: { summary: 'Placement offers' } },
     '/placements/{placementId}/accept': { post: { summary: 'Accept an offer and create a shift' } },
     '/placements/{placementId}/decline': { post: { summary: 'Decline an offer' } },
+    '/workers/me/reviews': { get: { summary: 'Worker and hospital reviews' }, post: { summary: 'Worker review of a hospital shift' } },
+    '/hospitals/me/reviews': { post: { summary: 'Hospital review of a worker' } },
     '/workers/me/shifts': { get: { summary: 'Worker shifts' } },
     '/shifts/{shiftId}/check-in': { post: { summary: 'Geofenced check-in' } },
     '/shifts/{shiftId}/check-out': { post: { summary: 'Check out and create a pending payment' } },

@@ -19,6 +19,8 @@ import java.util.List;
 public class ApplicationsViewModel extends AndroidViewModel {
     private final WorkerRepository repository;
     private final MutableLiveData<Resource<List<Dtos.ApplicationItem>>> applications = new MutableLiveData<>();
+    private long loadedAt;
+    private boolean busy;
 
     public ApplicationsViewModel(@NonNull Application application) {
         super(application);
@@ -30,22 +32,37 @@ public class ApplicationsViewModel extends AndroidViewModel {
     }
 
     public void refresh() {
-        if (applications.getValue() == null || applications.getValue().data == null) {
-            applications.setValue(Resource.loading());
-        }
+        refresh(false);
+    }
+
+    public void refresh(boolean force) {
+        if (!force && loadedAt > 0 && System.currentTimeMillis() - loadedAt < 20_000) return;
+        if (busy) return;
+        busy = true;
         AppExecutors.IO.execute(() -> {
-            if (applications.getValue() == null || applications.getValue().data == null) {
-                List<Dtos.ApplicationItem> saved = repository.cachedApplications();
-                if (!saved.isEmpty()) applications.postValue(Resource.success(saved));
-            }
             try {
+                Resource<List<Dtos.ApplicationItem>> current = applications.getValue();
+                if (current == null || current.data == null) {
+                    List<Dtos.ApplicationItem> saved = repository.cachedApplications();
+                    if (!saved.isEmpty()) applications.postValue(Resource.success(saved));
+                    else applications.postValue(Resource.loading());
+                }
                 applications.postValue(Resource.success(repository.applications()));
+                loadedAt = System.currentTimeMillis();
             } catch (ApiException error) {
-                applications.postValue(Resource.error(error.getMessage()));
+                if (applications.getValue() == null || applications.getValue().data == null) {
+                    applications.postValue(Resource.error(error.getMessage()));
+                }
             } catch (IOException error) {
                 List<Dtos.ApplicationItem> cached = repository.cachedApplications();
-                if (!cached.isEmpty()) applications.postValue(Resource.offline(cached, "Showing saved applications"));
-                else applications.postValue(Resource.error("Can't reach Shafi SOS. Check your connection."));
+                if (!cached.isEmpty()) {
+                    applications.postValue(Resource.offline(cached, "Showing saved applications"));
+                    loadedAt = System.currentTimeMillis();
+                } else if (applications.getValue() == null || applications.getValue().data == null) {
+                    applications.postValue(Resource.error("Can't reach Shafi SOS. Check your connection."));
+                }
+            } finally {
+                busy = false;
             }
         });
     }

@@ -240,6 +240,31 @@ public final class Dtos {
         public List<PaymentInfo> items;
     }
 
+    public static class ReviewItem {
+        public String id;
+        public String author;
+        public String authorName;
+        public String hospitalName;
+        public String jobTitle;
+        public String shiftId;
+        public int rating;
+        public String message;
+        public String createdAt;
+    }
+
+    public static class ReviewShift {
+        public String id;
+        public String hospitalName;
+        public String jobTitle;
+        public String shiftDate;
+        public boolean reviewed;
+    }
+
+    public static class ReviewPage {
+        public java.util.List<ReviewItem> items;
+        public java.util.List<ReviewShift> shifts;
+    }
+
     public static class NoticePage {
         public int unread;
         public List<ActivityItem> items;

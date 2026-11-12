@@ -227,6 +227,34 @@ api.post('/placements/:placementId/decline', requireAuth, requireRole('WORKER'),
   try { send(res, 'Offer declined', await staffing.declinePlacement(pid(req.params.placementId), req.auth!.id)); } catch (error) { next(error); }
 });
 
+api.get('/workers/me/reviews', requireAuth, requireRole('WORKER'), async (req, res, next) => {
+  try { send(res, 'Reviews', await staffing.listReviews(req.auth!.id)); } catch (error) { next(error); }
+});
+
+api.post('/workers/me/reviews', requireAuth, requireRole('WORKER'), async (req, res, next) => {
+  try {
+    const body = parse(z.object({
+      shiftId: z.string().min(1),
+      rating: z.number().min(1).max(5),
+      message: z.string().max(500).optional(),
+    }), req.body);
+    send(res, 'Review saved', await staffing.addWorkerReview(req.auth!.id, body.shiftId, body.rating, body.message || ''));
+  } catch (error) { next(error); }
+});
+
+api.post('/hospitals/me/reviews', requireAuth, requireRole('HOSPITAL', 'ADMIN', 'SUPER_ADMIN'), async (req, res, next) => {
+  try {
+    const body = parse(z.object({
+      workerId: z.string().min(1),
+      shiftId: z.string().optional(),
+      rating: z.number().min(1).max(5),
+      message: z.string().max(500).optional(),
+      jobTitle: z.string().optional(),
+    }), req.body);
+    send(res, 'Review saved', await staffing.addHospitalReview(req.auth!.hospitalId, body));
+  } catch (error) { next(error); }
+});
+
 api.get('/workers/me/shifts', requireAuth, requireRole('WORKER'), async (req, res, next) => {
   try { send(res, 'Shifts', await staffing.listMyShifts(req.auth!.id, String(req.query.status || ''))); } catch (error) { next(error); }
 });

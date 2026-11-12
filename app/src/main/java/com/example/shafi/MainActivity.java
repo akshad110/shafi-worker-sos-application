@@ -1,10 +1,15 @@
 package com.example.shafi;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
@@ -12,6 +17,7 @@ import androidx.navigation.NavOptions;
 import androidx.navigation.Navigation;
 
 import com.example.shafi.core.AppExecutors;
+import com.example.shafi.core.ShiftAlerts;
 import com.example.shafi.core.Format;
 import com.example.shafi.core.SecureStore;
 import com.example.shafi.core.SessionBus;
@@ -34,6 +40,11 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         SystemBars.apply(this);
+        ShiftAlerts.ensureChannel(this);
+        if (Build.VERSION.SDK_INT >= 33
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 91);
+        }
         if (getSupportActionBar() != null) getSupportActionBar().hide();
 
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_main);

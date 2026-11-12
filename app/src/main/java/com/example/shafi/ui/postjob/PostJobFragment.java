@@ -45,7 +45,8 @@ public class PostJobFragment extends Fragment {
                 if (!recyclerView.canScrollVertically(1)) viewModel.loadMore();
             }
         });
-        binding.refresh.setOnRefreshListener(this::reload);
+        binding.refresh.setOnRefreshListener(() -> reload(true));
+        binding.rvJobs.setItemAnimator(null);
         binding.etSearch.addTextChangedListener(new android.text.TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
@@ -83,8 +84,12 @@ public class PostJobFragment extends Fragment {
     }
 
     private void reload() {
+        reload(false);
+    }
+
+    private void reload(boolean force) {
         if (binding == null) return;
-        viewModel.search(binding.etSearch.getText().toString(), shiftType, urgent, sort);
+        viewModel.search(binding.etSearch.getText().toString(), shiftType, urgent, sort, force);
     }
 
     private void render(JobAdapter adapter, Resource<List<Dtos.JobItem>> resource) {

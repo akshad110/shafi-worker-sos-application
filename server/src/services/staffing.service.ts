@@ -13,8 +13,9 @@ import { signValue } from '../utils/helpers';
 import { accessUrl, readLocalObject, savePrivateObject } from './storage';
 import { notify, queueWhatsApp } from './notify';
 import {
-  createHospitalApplication, findHospitalApplication, hospitalApplicationsFor, hospitalShiftsFor,
-  loadHospitalJob, loadPublishedJobs, paymentFor, presentApplication, presentShift, presentedHospitalShift, toAppStatus,
+  accountForHospitalWorker, createHospitalApplication, findHospitalApplication, hospitalApplicationsFor, hospitalShiftsFor,
+  loadHospitalJob, loadPublishedJobs, paymentFor, presentApplication, presentShift, presentedHospitalShift,
+  rawReviewsFor, saveReview, toAppStatus,
 } from './hospital-data';
 
 function escapeRegex(value: string) {
@@ -821,6 +822,230 @@ export async function reportIncident(shiftId: string, workerId: string, category
   return shiftView(shift);
 }
 
+type ReviewView = {
+  id: string;
+  author: 'WORKER' | 'HOSPITAL';
+  authorName: string;
+  hospitalName: string;
+  jobTitle: string;
+  shiftId: string;
+  rating: number;
+  message: string;
+  createdAt: Date | string | null;
+};
+
+type ReviewShift = {
+  id: string;
+  hospitalName: string;
+  jobTitle: string;
+  shiftDate: string;
+  reviewed: boolean;
+};
+
+function asRating(value: unknown): number | null {
+  const rating = Number(value);
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) return null;
+  return Math.round(rating);
+}
+
+function textOf(value: unknown): string {
+  if (typeof value === 'string') return value.trim();
+  if (value && typeof value === 'object') {
+    const bag = value as Record<string, unknown>;
+    return textOf(bag.message || bag.comment || bag.review || bag.note || bag.text || '');
+  }
+  return '';
+}
+
+function presentStoredReview(doc: Record<string, any>): ReviewView | null {
+  const rating = asRating(doc.rating ?? doc.stars ?? doc.score);
+  if (!rating) return null;
+  const authorRaw = String(doc.author || doc.from || doc.direction || '').toUpperCase();
+  const author = authorRaw.includes('WORKER') || authorRaw === 'YOU' ? 'WORKER' : 'HOSPITAL';
+  return {
+    id: String(doc.id || doc._id || ''),
+    author,
+    authorName: doc.authorName || (author === 'WORKER' ? 'You' : (doc.hospitalName || 'Hospital')),
+    hospitalName: doc.hospitalName || doc.hospital || 'Hospital',
+    jobTitle: doc.jobTitle || doc.title || doc.role || 'Shift',
+    shiftId: String(doc.shiftId || ''),
+    rating,
+    message: textOf(doc.message || doc.comment || doc.review || doc.note || ''),
+    createdAt: doc.createdAt || doc.at || doc.updatedAt || null,
+  };
+}
+
+function bagReview(bag: unknown, author: 'WORKER' | 'HOSPITAL', hospitalName: string, jobTitle: string, shiftId: string, createdAt: Date | string | null): ReviewView | null {
+  if (!bag || (typeof bag !== 'object' && asRating(bag) == null)) return null;
+  const rating = typeof bag === 'object' ? asRating((bag as Record<string, unknown>).rating ?? (bag as Record<string, unknown>).stars ?? (bag as Record<string, unknown>).score) : asRating(bag);
+  if (!rating) return null;
+  return {
+    id: `${author}-${shiftId}`,
+    author,
+    authorName: author === 'WORKER' ? 'You' : hospitalName,
+    hospitalName,
+    jobTitle,
+    shiftId,
+    rating,
+    message: textOf(bag),
+    createdAt,
+  };
+}
+
+async function reviewTargets(workerId: string) {
+  const targets: Array<ReviewShift & { hospitalId: string; completed: boolean }> = [];
+  const own = await Shift.find({ workerId }).sort({ endAt: -1 });
+  for (const shift of own) {
+    const job = await Job.findById(shift.jobId);
+    targets.push({
+      id: shift.id,
+      hospitalId: String(shift.hospitalId || job?.hospitalId || ''),
+      hospitalName: job?.hospitalName || 'Hospital',
+      jobTitle: job?.title || 'Shift',
+      shiftDate: job?.shiftDate || '',
+      reviewed: false,
+      completed: shift.status === 'COMPLETED',
+    });
+  }
+  const shared = await hospitalShiftsFor(workerId);
+  for (const shift of shared) {
+    const place = shift.jobId ? await loadHospitalJob(String(shift.jobId)) : null;
+    const status = String(shift.status || '').toLowerCase();
+    const dated = shift.date ? new Date(String(shift.date)).getTime() : 0;
+    const completed = status === 'completed' || status === 'complete' || (dated > 0 && dated < Date.now() - 12 * 60 * 60 * 1000);
+    targets.push({
+      id: String(shift.id),
+      hospitalId: String(shift.hospitalId || place?.hospitalId || ''),
+      hospitalName: place?.hospitalName || 'Hospital',
+      jobTitle: place?.title || shift.role || shift.title || 'Shift',
+      shiftDate: String(shift.date || place?.shiftDate || ''),
+      reviewed: false,
+      completed,
+    });
+  }
+  return targets;
+}
+
+function remember(items: ReviewView[], next: ReviewView | null) {
+  if (!next) return;
+  const key = `${next.author}|${next.shiftId}|${next.rating}|${next.message}`;
+  if (items.some((item) => `${item.author}|${item.shiftId}|${item.rating}|${item.message}` === key)) return;
+  items.push(next);
+}
+
+export async function listReviews(workerId: string) {
+  const items: ReviewView[] = [];
+  const shared = await rawReviewsFor(workerId);
+  for (const doc of shared.reviews) remember(items, presentStoredReview(doc));
+  for (const person of shared.people) {
+    const lists = [person.reviews, person.ratings, person.hospitalReviews];
+    for (const list of lists) {
+      if (!Array.isArray(list)) continue;
+      for (const entry of list) remember(items, presentStoredReview(entry));
+    }
+  }
+  const own = await Shift.find({ workerId, feedbackRating: { $gte: 1 } });
+  for (const shift of own) {
+    const job = await Job.findById(shift.jobId);
+    remember(items, {
+      id: `shift-${shift.id}`,
+      author: 'WORKER',
+      authorName: 'You',
+      hospitalName: job?.hospitalName || 'Hospital',
+      jobTitle: job?.title || 'Shift',
+      shiftId: shift.id,
+      rating: Number(shift.feedbackRating),
+      message: shift.feedbackComment || '',
+      createdAt: shift.updatedAt || null,
+    });
+  }
+  const hospitalShifts = await hospitalShiftsFor(workerId);
+  for (const shift of hospitalShifts) {
+    const place = shift.jobId ? await loadHospitalJob(String(shift.jobId)) : null;
+    const hospitalName = place?.hospitalName || 'Hospital';
+    const jobTitle = place?.title || shift.role || shift.title || 'Shift';
+    const when = shift.updatedAt || shift.createdAt || shift.date || null;
+    const hospitalBags = [shift.hospitalReview, shift.reviewForWorker, shift.reviewOfWorker, shift.workerRating];
+    for (const bag of hospitalBags) remember(items, bagReview(bag, 'HOSPITAL', hospitalName, jobTitle, String(shift.id), when));
+    const workerBags = [shift.workerReview, shift.workerFeedback, shift.feedback];
+    for (const bag of workerBags) remember(items, bagReview(bag, 'WORKER', hospitalName, jobTitle, String(shift.id), when));
+    if (!items.some((item) => item.author === 'HOSPITAL' && item.shiftId === String(shift.id))) {
+      const rating = asRating(shift.hospitalRating ?? shift.rating);
+      const message = textOf(shift.hospitalComment || shift.hospitalMessage || shift.review || '');
+      if (rating && (shift.hospitalRating || shift.hospitalComment || shift.hospitalMessage || shift.review || shift.rating)) {
+        remember(items, {
+          id: `hospital-${shift.id}`,
+          author: 'HOSPITAL',
+          authorName: hospitalName,
+          hospitalName,
+          jobTitle,
+          shiftId: String(shift.id),
+          rating,
+          message,
+          createdAt: when,
+        });
+      }
+    }
+  }
+  items.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+  const targets = await reviewTargets(workerId);
+  const shifts = targets.filter((item) => item.completed).map((item) => ({
+    id: item.id,
+    hospitalName: item.hospitalName,
+    jobTitle: item.jobTitle,
+    shiftDate: item.shiftDate,
+    reviewed: items.some((review) => review.author === 'WORKER' && review.shiftId === item.id),
+  }));
+  return { items, shifts };
+}
+
+export async function addWorkerReview(workerId: string, shiftId: string, rating: number, message: string) {
+  const targets = await reviewTargets(workerId);
+  const target = targets.find((item) => item.id === shiftId);
+  if (!target) throw new ApiError(404, 'Shift not found', 'NOT_FOUND');
+  if (!target.completed) throw new ApiError(409, 'You can review a hospital after the shift is complete', 'INVALID_STATE');
+  await saveReview({ accountId: workerId, shiftId, author: 'WORKER' }, {
+    accountId: workerId,
+    workerId,
+    hospitalId: target.hospitalId,
+    hospitalName: target.hospitalName,
+    jobTitle: target.jobTitle,
+    shiftId,
+    author: 'WORKER',
+    authorName: 'You',
+    rating,
+    message,
+  });
+  if (mongoose.isValidObjectId(shiftId)) {
+    await Shift.updateOne({ _id: shiftId, workerId }, { $set: { feedbackRating: rating, feedbackComment: message } });
+  }
+  return listReviews(workerId);
+}
+
+export async function addHospitalReview(hospitalId: string | undefined, input: { workerId: string; shiftId?: string; rating: number; message?: string; jobTitle?: string }) {
+  const hospital = hospitalId && mongoose.isValidObjectId(hospitalId) ? await Hospital.findById(hospitalId) : null;
+  const accountId = mongoose.isValidObjectId(input.workerId) ? input.workerId : await accountForHospitalWorker(input.workerId);
+  const hospitalName = hospital?.name || 'Hospital';
+  await saveReview({
+    author: 'HOSPITAL',
+    hospitalId: hospitalId || '',
+    workerId: input.workerId,
+    shiftId: input.shiftId || '',
+  }, {
+    accountId,
+    workerId: input.workerId,
+    hospitalId: hospitalId || '',
+    hospitalName,
+    jobTitle: input.jobTitle || 'Shift',
+    shiftId: input.shiftId || '',
+    author: 'HOSPITAL',
+    authorName: hospitalName,
+    rating: input.rating,
+    message: input.message || '',
+  });
+  return { saved: true };
+}
+
 export async function addFeedback(shiftId: string, workerId: string, rating: number, comment: string) {
   const shift = await Shift.findById(shiftId);
   if (!shift || String(shift.workerId) !== workerId) throw new ApiError(404, 'Shift not found', 'NOT_FOUND');
@@ -828,6 +1053,19 @@ export async function addFeedback(shiftId: string, workerId: string, rating: num
   shift.feedbackRating = rating;
   shift.feedbackComment = comment;
   await shift.save();
+  const job = await Job.findById(shift.jobId);
+  await saveReview({ accountId: workerId, shiftId, author: 'WORKER' }, {
+    accountId: workerId,
+    workerId,
+    hospitalId: String(shift.hospitalId || ''),
+    hospitalName: job?.hospitalName || 'Hospital',
+    jobTitle: job?.title || 'Shift',
+    shiftId,
+    author: 'WORKER',
+    authorName: 'You',
+    rating,
+    message: comment,
+  });
   return shiftView(shift);
 }
 

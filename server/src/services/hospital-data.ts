@@ -248,6 +248,35 @@ export async function hospitalShiftsFor(accountId: string) {
   return collection('shifts').find({ workerId: { $in: workerIds } }).sort({ date: 1, startTime: 1 }).toArray();
 }
 
+export async function linkedWorkerIds(accountId: string) {
+  return workerIdsFor(accountId);
+}
+
+export async function rawReviewsFor(accountId: string) {
+  const ids = await workerIdsFor(accountId);
+  const or: Doc[] = [{ accountId }, { workerAccountId: accountId }, { workerId: accountId }];
+  if (ids.length) {
+    or.push({ workerId: { $in: ids } });
+    or.push({ accountId: { $in: ids } });
+  }
+  const reviews = await collection('reviews').find({ $or: or }).sort({ createdAt: -1 }).toArray();
+  const people = ids.length ? await collection('workers').find({ id: { $in: ids } }).toArray() : [];
+  return { reviews, people };
+}
+
+export async function saveReview(filter: Doc, fields: Doc) {
+  const now = new Date();
+  await collection('reviews').updateOne(filter, {
+    $set: { ...fields, updatedAt: now },
+    $setOnInsert: { id: sharedId(), createdAt: now },
+  }, { upsert: true });
+}
+
+export async function accountForHospitalWorker(workerId: string) {
+  const link = await collection('workerLinks').findOne({ workerId });
+  return link?.accountId ? String(link.accountId) : '';
+}
+
 export function presentApplication(application: Doc, job: Doc | null) {
   const history = Array.isArray(application.timeline) ? application.timeline.map((item: Doc) => ({
     status: toAppStatus(String(item.status || '')),
