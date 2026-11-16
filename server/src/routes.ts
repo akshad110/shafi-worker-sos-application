@@ -107,6 +107,13 @@ api.patch('/users/me/preferences', requireAuth, async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+api.delete('/workers/me', requireAuth, requireRole('WORKER'), async (req, res, next) => {
+  try {
+    await auth.deleteAccount(req.auth!.id);
+    send(res, 'Account deleted', {});
+  } catch (error) { next(error); }
+});
+
 api.get('/workers/me/profile', requireAuth, requireRole('WORKER'), async (req, res, next) => {
   try { send(res, 'Profile', await staffing.getProfile(req.auth!.id)); } catch (error) { next(error); }
 });

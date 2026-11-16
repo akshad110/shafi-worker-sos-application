@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-import { OtpChallenge, Session, User, WorkerProfile } from '../models';
+import { Notification, OtpChallenge, Session, User, WorkerDocument, WorkerProfile } from '../models';
 import { ApiError } from '../utils/errors';
 import { hashToken, normalizeMobile } from '../utils/helpers';
 
@@ -211,6 +211,21 @@ export async function refresh(refreshToken: string) {
   session.replacedBy = undefined;
   await session.save();
   return next;
+}
+
+export async function deleteAccount(userId: string) {
+  await Session.deleteMany({ userId });
+  await WorkerProfile.deleteOne({ userId });
+  await WorkerDocument.deleteMany({ workerId: userId });
+  await Notification.deleteMany({ userId });
+  const user = await User.findById(userId);
+  if (!user) return;
+  user.status = 'SUSPENDED';
+  user.fullName = 'Deleted account';
+  user.email = `deleted-${user.id}@shafi.invalid`;
+  user.mobile = `p${crypto.randomBytes(8).toString('hex')}`;
+  user.passwordHash = undefined;
+  await user.save();
 }
 
 export async function logout(refreshToken: string) {

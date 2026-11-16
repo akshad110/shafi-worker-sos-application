@@ -50,7 +50,7 @@ public class JobsViewModel extends AndroidViewModel {
         this.urgentOnly = urgentOnly;
         this.sort = sort == null ? "newest" : sort;
         String key = this.query + "|" + this.shiftType + "|" + this.urgentOnly + "|" + this.sort;
-        if (!force && key.equals(loadedKey) && !loaded.isEmpty() && System.currentTimeMillis() - loadedAt < 20_000) return;
+        if (!force && key.equals(loadedKey) && !loaded.isEmpty() && System.currentTimeMillis() - loadedAt < 60_000) return;
         page = 1;
         fetch(true);
     }

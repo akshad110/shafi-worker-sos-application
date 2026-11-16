@@ -6,11 +6,9 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.appcompat.widget.PopupMenu;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.NavOptions;
@@ -18,12 +16,12 @@ import androidx.navigation.Navigation;
 
 import com.example.shafi.core.AppExecutors;
 import com.example.shafi.core.ShiftAlerts;
-import com.example.shafi.core.Format;
 import com.example.shafi.core.SecureStore;
 import com.example.shafi.core.SessionBus;
 import com.example.shafi.data.WorkerRepository;
 import com.example.shafi.databinding.ActivityMainBinding;
 import com.example.shafi.ui.AppDialog;
+import com.example.shafi.ui.LetterMark;
 import com.example.shafi.ui.screens.NotificationsActivity;
 import com.example.shafi.viewmodel.HomeDashViewModel;
 
@@ -62,15 +60,15 @@ public class MainActivity extends AppCompatActivity {
             return true;
         });
 
-        binding.customToolbar.imgProfile.setOnClickListener(this::showProfileMenu);
+        binding.customToolbar.imgProfile.setOnClickListener(v ->
+                startActivity(new Intent(this, SettingActivity.class)));
+        showLetter();
         binding.customToolbar.btnNotifications.setOnClickListener(v ->
                 startActivity(new Intent(this, NotificationsActivity.class)));
-        binding.customToolbar.imgProfile.setText(Format.initials(SessionManager.getUsername(this)));
 
         HomeDashViewModel dashboard = new ViewModelProvider(this).get(HomeDashViewModel.class);
         dashboard.dashboard().observe(this, resource -> {
             if (resource.data == null) return;
-            binding.customToolbar.imgProfile.setText(Format.initials(resource.data.greetingName));
             String role = resource.data.healthcareRole;
             binding.customToolbar.tvRole.setText(role == null || role.isEmpty() ? "Healthcare worker" : role);
         });
@@ -88,38 +86,31 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void showProfileMenu(View anchor) {
-        PopupMenu popupMenu = new PopupMenu(this, anchor);
-        popupMenu.getMenuInflater().inflate(R.menu.menu_profile, popupMenu.getMenu());
-        popupMenu.setOnMenuItemClickListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.menu_profile) {
-                binding.navView.setSelectedItemId(R.id.navigation_profile);
-                return true;
-            } else if (itemId == R.id.menu_setting) {
-                startActivity(new Intent(this, SettingActivity.class));
-                return true;
-            } else if (itemId == R.id.menu_help) {
-                startActivity(new Intent(this, HelpActivity.class));
-                return true;
-            } else if (itemId == R.id.menu_logout) {
-                confirmLogout();
-                return true;
-            }
-            return false;
-        });
-        popupMenu.show();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        showLetter();
+    }
+
+    private void showLetter() {
+        if (binding == null) return;
+        binding.navView.getMenu().findItem(R.id.navigation_profile)
+                .setIcon(LetterMark.icon(this, SecureStore.name()));
     }
 
     public void confirmLogout() {
         AppDialog.confirm(this,
-                "Log out",
+                "Sign out",
                 "You will need to sign in again to see shifts and applications.",
-                "Log out",
+                "Sign out",
                 () -> {
                     AppExecutors.IO.execute(() -> new WorkerRepository(this).logout());
                     openLogin();
                 });
+    }
+
+    public void leave() {
+        openLogin();
     }
 
     private void openLogin() {

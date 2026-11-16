@@ -67,6 +67,11 @@ public class WorkerRepository {
         return result;
     }
 
+    public void deleteAccount() throws IOException, ApiException {
+        unwrap(api.deleteAccount().execute());
+        SecureStore.clear();
+    }
+
     public void logout() {
         String refresh = SecureStore.refresh();
         SecureStore.clear();

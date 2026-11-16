@@ -6,6 +6,7 @@ import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
@@ -29,6 +30,9 @@ public interface ApiService {
 
     @POST("auth/logout")
     Call<Dtos.Envelope<Object>> logout(@Body Map<String, String> body);
+
+    @DELETE("workers/me")
+    Call<Dtos.Envelope<Object>> deleteAccount();
 
     @GET("workers/me/dashboard")
     Call<Dtos.Envelope<Dtos.Dashboard>> dashboard();

@@ -24,7 +24,7 @@
 
         <!-- Hospital / App Logo -->
         <ImageView
-            android:layout_width="132dp"
+            android:layout_width="156dp"
             android:layout_height="wrap_content"
             android:adjustViewBounds="true"
             android:contentDescription="Shafi SOS"
@@ -97,21 +97,17 @@
                 android:textStyle="bold" />
         </FrameLayout>
 
-        <!-- Profile Avatar (HA) -->
-        <TextView
+        <ImageView
             android:id="@+id/img_profile"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/bg_avatar"
+            android:background="@drawable/bg_bell_circle"
             android:clickable="true"
-            android:contentDescription="Profile menu"
+            android:contentDescription="Settings"
             android:elevation="2dp"
             android:focusable="true"
-            android:gravity="center"
-            android:text="HA"
-            android:textColor="@color/white"
-            android:textSize="13sp"
-            android:textStyle="bold" />
+            android:padding="9dp"
+            android:src="@drawable/ic_settings" />
 
     </LinearLayout>
 

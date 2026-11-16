@@ -11,5 +11,5 @@
         android:title="Help" />
     <item
         android:id="@+id/menu_logout"
-        android:title="Logout" />
+        android:title="Sign out" />
 </menu>

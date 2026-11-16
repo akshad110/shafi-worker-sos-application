@@ -19,10 +19,14 @@ import com.example.shafi.HelpActivity;
 import com.example.shafi.MainActivity;
 import com.example.shafi.R;
 import com.example.shafi.SettingActivity;
+import com.example.shafi.core.AppExecutors;
 import com.example.shafi.core.Format;
 import com.example.shafi.core.Resource;
 import com.example.shafi.data.Dtos;
+import com.example.shafi.data.WorkerRepository;
 import com.example.shafi.databinding.FragmentProfileBinding;
+import com.example.shafi.ui.AppDialog;
+import com.example.shafi.ui.LetterMark;
 import com.example.shafi.ui.screens.DocumentsActivity;
 import com.example.shafi.ui.screens.EarningsActivity;
 import com.example.shafi.ui.screens.OnboardingActivity;
@@ -51,6 +55,7 @@ public class ProfileFragment extends Fragment {
         binding.btnLogout.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) ((MainActivity) getActivity()).confirmLogout();
         });
+        binding.btnDelete.setOnClickListener(v -> confirmDelete());
         viewModel.profile().observe(getViewLifecycleOwner(), this::render);
         return binding.getRoot();
     }
@@ -73,8 +78,8 @@ public class ProfileFragment extends Fragment {
         current = resource.data;
         Dtos.UserAccount user = resource.data.user;
         Dtos.WorkerProfile profile = resource.data.profile;
-        binding.tvInitials.setText(Format.initials(user.fullName));
         binding.tvName.setText(user.fullName);
+        binding.tvLetter.setText(LetterMark.letter(user.fullName));
         binding.tvEmail.setText(user.email == null || user.email.isEmpty() ? "Email not added" : user.email);
         binding.tvPhone.setText(user.mobile == null || user.mobile.isEmpty() ? "Mobile not added" : user.mobile);
         binding.tvRole.setText(profile == null || profile.healthcareRole == null || profile.healthcareRole.isEmpty()
@@ -87,6 +92,30 @@ public class ProfileFragment extends Fragment {
         binding.tvStatus.setTextColor(requireContext().getColor(verified ? R.color.emerald_deep : R.color.pending));
         binding.tvCompletion.setText("Profile " + resource.data.completion + "% complete");
         binding.progressProfile.setProgress(resource.data.completion);
+    }
+
+    private void confirmDelete() {
+        AppDialog.confirm(requireContext(),
+                "Delete account",
+                "This removes your sign-in and profile. You cannot undo it.",
+                "Delete account",
+                () -> AppExecutors.IO.execute(() -> {
+                    try {
+                        new WorkerRepository(requireContext()).deleteAccount();
+                        if (getActivity() instanceof MainActivity) {
+                            getActivity().runOnUiThread(() -> ((MainActivity) getActivity()).leave());
+                        }
+                    } catch (Exception error) {
+                        if (getActivity() != null && binding != null) {
+                            getActivity().runOnUiThread(() -> {
+                                binding.tvError.setVisibility(View.VISIBLE);
+                                binding.tvError.setText(error.getMessage() == null
+                                        ? "Couldn't delete the account."
+                                        : error.getMessage());
+                            });
+                        }
+                    }
+                }));
     }
 
     private void showEdit() {

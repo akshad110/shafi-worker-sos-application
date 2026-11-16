@@ -4,10 +4,12 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.shafi.R;
 import com.example.shafi.core.Format;
 import com.example.shafi.data.Dtos;
 import com.example.shafi.databinding.ItemApplicationBinding;
@@ -47,7 +49,25 @@ public class ApplicationAdapter extends ListAdapter<Dtos.ApplicationItem, Applic
         holder.binding.tvWhen.setText(job == null ? "" : Format.shift(job.shiftDate, job.startTime, job.endTime));
         holder.binding.tvPay.setText(job == null ? "" : Format.money(job.compensationMinor, job.currency));
         holder.binding.tvStatus.setText(Format.status(item.status));
+        paintStatus(holder, item.status);
         holder.itemView.setOnClickListener(v -> listener.open(item));
+    }
+
+    private void paintStatus(Holder holder, String status) {
+        int background = R.drawable.bg_pill_pending;
+        int color = R.color.pending;
+        if ("ACCEPTED".equals(status) || "SHORTLISTED".equals(status)) {
+            background = R.drawable.bg_pill_green;
+            color = R.color.emerald_deep;
+        } else if ("OFFERED".equals(status)) {
+            background = R.drawable.bg_pill_blue;
+            color = R.color.navy_action;
+        } else if ("REJECTED".equals(status) || "DECLINED".equals(status) || "WITHDRAWN".equals(status)) {
+            background = R.drawable.bg_pill_urgent;
+            color = R.color.sos;
+        }
+        holder.binding.tvStatus.setBackgroundResource(background);
+        holder.binding.tvStatus.setTextColor(ContextCompat.getColor(holder.itemView.getContext(), color));
     }
 
     static class Holder extends RecyclerView.ViewHolder {

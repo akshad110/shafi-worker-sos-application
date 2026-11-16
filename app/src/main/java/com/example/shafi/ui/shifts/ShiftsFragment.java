@@ -18,7 +18,6 @@ import com.example.shafi.core.Format;
 import com.example.shafi.core.Resource;
 import com.example.shafi.data.Dtos;
 import com.example.shafi.databinding.FragmentShiftsBinding;
-import com.example.shafi.ui.DayAdapter;
 import com.example.shafi.ui.ShiftAdapter;
 import com.example.shafi.ui.screens.AttendanceActivity;
 import com.example.shafi.ui.screens.ShiftDetailActivity;
@@ -32,9 +31,7 @@ import java.util.Set;
 public class ShiftsFragment extends Fragment {
     private FragmentShiftsBinding binding;
     private ShiftsViewModel viewModel;
-    private DayAdapter days;
     private String selectedDay = Format.todayKey();
-    private boolean dayChosen;
     private String statusFilter = "";
     private String department = "";
     private List<Dtos.ShiftItem> all = new ArrayList<>();
@@ -45,21 +42,14 @@ public class ShiftsFragment extends Fragment {
         viewModel = new ViewModelProvider(this).get(ShiftsViewModel.class);
         ShiftAdapter adapter = new ShiftAdapter(item ->
                 startActivity(new Intent(requireContext(), ShiftDetailActivity.class).putExtra("id", item.id)));
-        days = new DayAdapter(key -> {
-            selectedDay = key;
-            dayChosen = true;
-            statusFilter = "";
-            show(adapter);
-        });
         binding.rvItems.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvItems.setAdapter(adapter);
-        binding.rvDays.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
-        binding.rvDays.setAdapter(days);
         binding.refresh.setOnRefreshListener(() -> viewModel.refresh(true));
         binding.rvItems.setItemAnimator(null);
         binding.btnAttendance.setOnClickListener(v -> startActivity(new Intent(requireContext(), AttendanceActivity.class)));
-        binding.btnDayPrev.setOnClickListener(v -> binding.rvDays.smoothScrollBy(-dp(220), 0));
-        binding.btnDayNext.setOnClickListener(v -> binding.rvDays.smoothScrollBy(dp(220), 0));
+        binding.btnDayPrev.setOnClickListener(v -> moveDay(-1, adapter));
+        binding.btnDayNext.setOnClickListener(v -> moveDay(1, adapter));
+        binding.chipAll.setOnClickListener(v -> chooseStatus("", adapter));
         binding.chipUpcoming.setOnClickListener(v -> chooseStatus("UPCOMING", adapter));
         binding.chipActive.setOnClickListener(v -> chooseStatus("ACTIVE", adapter));
         binding.chipCompleted.setOnClickListener(v -> chooseStatus("COMPLETED", adapter));
@@ -85,8 +75,13 @@ public class ShiftsFragment extends Fragment {
         viewModel.refresh();
     }
 
+    private void moveDay(int amount, ShiftAdapter adapter) {
+        selectedDay = Format.plusDays(selectedDay, amount);
+        show(adapter);
+    }
+
     private void chooseStatus(String status, ShiftAdapter adapter) {
-        statusFilter = status.equals(statusFilter) ? "" : status;
+        statusFilter = status;
         show(adapter);
     }
 
@@ -108,61 +103,41 @@ public class ShiftsFragment extends Fragment {
         if (binding == null) return;
         List<Dtos.ShiftItem> scoped = new ArrayList<>();
         for (Dtos.ShiftItem item : all) {
-            if (matchesDepartment(item)) scoped.add(item);
+            if (matchesDepartment(item) && selectedDay.equals(Format.shiftDay(item))) scoped.add(item);
         }
         int coming = count(scoped, "UPCOMING");
         int now = count(scoped, "ACTIVE");
         int done = count(scoped, "COMPLETED");
         int cancelled = count(scoped, "CANCELLED");
+        binding.tvSelectedDay.setText(dayLabel());
         binding.chipUpcoming.setText("Coming " + coming);
         binding.chipActive.setText("Now " + now);
         binding.chipCompleted.setText("Done " + done);
         binding.chipCancelled.setText("Cancelled " + cancelled);
+        paintCount(binding.chipAll, statusFilter.isEmpty());
         paintCount(binding.chipUpcoming, "UPCOMING".equals(statusFilter));
         paintCount(binding.chipActive, "ACTIVE".equals(statusFilter));
         paintCount(binding.chipCompleted, "COMPLETED".equals(statusFilter));
         paintCount(binding.chipCancelled, "CANCELLED".equals(statusFilter));
 
-        Set<String> marked = new LinkedHashSet<>();
-        for (Dtos.ShiftItem item : scoped) {
-            String day = Format.shiftDay(item);
-            if (!day.isEmpty()) marked.add(day);
-        }
-        if (!dayChosen && !marked.isEmpty()) {
-            String today = Format.todayKey();
-            selectedDay = marked.contains(today) ? today : marked.iterator().next();
-            dayChosen = true;
-        }
-        List<DayAdapter.Day> strip = new ArrayList<>();
-        String start = Format.plusDays(Format.todayKey(), -2);
-        for (int i = 0; i < 16; i++) {
-            String key = Format.plusDays(start, i);
-            DayAdapter.Day day = new DayAdapter.Day();
-            day.key = key;
-            day.weekday = Format.weekday(key);
-            day.number = Format.dayNumber(key);
-            day.hasShift = marked.contains(key);
-            day.selected = statusFilter.isEmpty() && key.equals(selectedDay);
-            strip.add(day);
-        }
-        days.submit(strip);
-
         List<Dtos.ShiftItem> visible = new ArrayList<>();
         for (Dtos.ShiftItem item : scoped) {
-            if (!statusFilter.isEmpty()) {
-                if (statusFilter.equals(item.status)) visible.add(item);
-            } else if (selectedDay.equals(Format.shiftDay(item))) {
-                visible.add(item);
-            }
+            if (statusFilter.isEmpty() || statusFilter.equals(item.status)) visible.add(item);
         }
         adapter.submitList(visible);
         boolean showEmpty = visible.isEmpty() && binding.progress.getVisibility() != View.VISIBLE;
         binding.tvState.setVisibility(showEmpty ? View.VISIBLE : View.GONE);
         if (showEmpty) {
             binding.tvState.setText(statusFilter.isEmpty()
-                    ? "No shift on this day."
-                    : "No " + statusFilter.toLowerCase() + " shifts.");
+                    ? "No shifts on this day."
+                    : "No " + statusFilter.toLowerCase() + " shifts on this day.");
         }
+    }
+
+    private String dayLabel() {
+        String date = Format.prettyDate(selectedDay);
+        if (selectedDay.equals(Format.todayKey())) return "Today, " + date;
+        return date;
     }
 
     private void paintCount(TextView chip, boolean on) {
@@ -193,10 +168,6 @@ public class ShiftsFragment extends Fragment {
             if (value != null && !value.isEmpty()) names.add(value);
         }
         return names;
-    }
-
-    private int dp(int value) {
-        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     @Override
