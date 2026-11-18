@@ -102,7 +102,7 @@ public class JobAdapter extends ListAdapter<Dtos.JobItem, JobAdapter.Holder> {
             if (sheet != null) sheet.dismiss();
         });
         sheet.show();
-        if (!details.containsKey(id) && !id.equals(loadingId)) {
+        if (!id.equals(loadingId)) {
             load(view.getContext().getApplicationContext(), id);
         }
     }

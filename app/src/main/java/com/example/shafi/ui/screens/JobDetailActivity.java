@@ -27,6 +27,11 @@ public class JobDetailActivity extends AppCompatActivity {
         repository = new WorkerRepository(this);
         binding.btnBack.setOnClickListener(v -> finish());
         binding.btnPrimary.setOnClickListener(v -> confirmApply());
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         load();
     }
 

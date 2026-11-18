@@ -33,6 +33,7 @@ public class ApplyActivity extends AppCompatActivity {
     private String jobId;
     private int pendingIndex = -1;
     private boolean loaded;
+    private boolean applied;
     private final List<Slot> slots = new ArrayList<>();
     private final ActivityResultLauncher<String[]> picker = registerForActivityResult(
             new ActivityResultContracts.OpenDocument(), this::chosen);
@@ -87,12 +88,29 @@ public class ApplyActivity extends AppCompatActivity {
                 addSlot(document);
             }
         }
+        if (job != null && job.hasApplied) {
+            lockApplied();
+            return;
+        }
         if (slots.isEmpty()) {
             binding.tvDocsHint.setText("This hospital did not ask for extra documents. You can submit the application.");
         } else {
             binding.tvDocsHint.setText("Upload each document below. JPG, PNG, or PDF, up to 5 MB.");
         }
         binding.btnSubmit.setEnabled(true);
+    }
+
+    private void lockApplied() {
+        applied = true;
+        loaded = true;
+        binding.progress.setVisibility(View.GONE);
+        binding.tvError.setVisibility(View.GONE);
+        binding.tvDocsHint.setText("You have already applied for this job.");
+        binding.btnSubmit.setText("Already applied");
+        binding.btnSubmit.setEnabled(false);
+        for (Slot slot : slots) {
+            if (slot.upload != null) slot.upload.setEnabled(false);
+        }
     }
 
     private void addSlot(Dtos.NeededDocument document) {
@@ -103,6 +121,7 @@ public class ApplyActivity extends AppCompatActivity {
         TextView name = row.findViewById(R.id.tv_name);
         TextView instruction = row.findViewById(R.id.tv_instruction);
         MaterialButton upload = row.findViewById(R.id.btn_upload);
+        slot.upload = upload;
         name.setText(slot.name);
         String note = document.instruction == null ? "" : document.instruction.trim();
         if (note.isEmpty()) {
@@ -130,7 +149,7 @@ public class ApplyActivity extends AppCompatActivity {
     }
 
     private void submit() {
-        if (!loaded) return;
+        if (!loaded || applied) return;
         for (Slot slot : slots) {
             if (slot.uri == null) {
                 fail("Upload " + slot.name + " before submitting.");
@@ -156,7 +175,7 @@ public class ApplyActivity extends AppCompatActivity {
                 }
                 Dtos.ApplicationItem application = repository.apply(jobId);
                 runOnUiThread(() -> {
-                    binding.progress.setVisibility(View.GONE);
+                    lockApplied();
                     new AlertDialog.Builder(this)
                             .setTitle("Application sent")
                             .setMessage("Reference " + application.reference + ". The hospital can open the documents you uploaded.")
@@ -166,8 +185,13 @@ public class ApplyActivity extends AppCompatActivity {
                 });
             } catch (Exception error) {
                 runOnUiThread(() -> {
+                    String message = error.getMessage();
+                    if (message != null && message.toLowerCase(java.util.Locale.US).contains("already applied")) {
+                        lockApplied();
+                        return;
+                    }
                     binding.btnSubmit.setEnabled(true);
-                    fail(error.getMessage());
+                    fail(message);
                 });
             }
         });
@@ -206,5 +230,6 @@ public class ApplyActivity extends AppCompatActivity {
         Uri uri;
         String fileName = "";
         TextView fileLabel;
+        MaterialButton upload;
     }
 }
