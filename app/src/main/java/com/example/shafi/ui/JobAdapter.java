@@ -132,6 +132,7 @@ public class JobAdapter extends ListAdapter<Dtos.JobItem, JobAdapter.Holder> {
         addSection("Qualifications", bullets(item.qualifications));
         addSection("Skills", bullets(item.skills));
         addSection("Certifications", bullets(item.certifications));
+        addSection("Documents needed", documentNames(item.requiredDocuments));
         addSection("Experience", item.experienceYears == null || item.experienceYears == 0 ? "" : item.experienceYears + " years");
         sheetBinding.extraBox.setVisibility(sheetBinding.extraBox.getChildCount() == 0 ? View.GONE : View.VISIBLE);
         String failure = errors.get(item.id);
@@ -166,6 +167,17 @@ public class JobAdapter extends ListAdapter<Dtos.JobItem, JobAdapter.Holder> {
         ((TextView) section.findViewById(R.id.tv_label)).setText(label);
         ((TextView) section.findViewById(R.id.tv_value)).setText(value.trim());
         sheetBinding.extraBox.addView(section);
+    }
+
+    private String documentNames(java.util.List<Dtos.NeededDocument> documents) {
+        if (documents == null || documents.isEmpty()) return "";
+        StringBuilder builder = new StringBuilder();
+        for (Dtos.NeededDocument document : documents) {
+            if (document == null || document.name == null || document.name.trim().isEmpty()) continue;
+            if (builder.length() > 0) builder.append('\n');
+            builder.append("• ").append(document.name.trim());
+        }
+        return builder.toString();
     }
 
     private String bullets(java.util.List<String> values) {

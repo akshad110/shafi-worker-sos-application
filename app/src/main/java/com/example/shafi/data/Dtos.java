@@ -61,6 +61,7 @@ public final class Dtos {
         public List<String> qualifications;
         public List<String> skills;
         public List<String> certifications;
+        public List<NeededDocument> requiredDocuments;
         public Integer experienceYears;
         public String reportingInstructions;
         public boolean geofenceEnabled;
@@ -70,6 +71,12 @@ public final class Dtos {
         public String eligibilityReason;
         public String supervisorName;
         public String supervisorPhone;
+    }
+
+    public static class NeededDocument {
+        public String id;
+        public String name;
+        public String instruction;
     }
 
     public static class JobPage {

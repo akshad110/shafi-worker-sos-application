@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Authenticator;
+import okhttp3.Dns;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -33,15 +34,19 @@ public final class ApiClient {
 
     public static synchronized ApiService service() {
         if (service == null) {
+            Dns dns = new ResilientDns();
             OkHttpClient refreshClient = new OkHttpClient.Builder()
-                    .connectTimeout(8, TimeUnit.SECONDS)
-                    .readTimeout(12, TimeUnit.SECONDS)
+                    .dns(dns)
+                    .connectTimeout(20, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .callTimeout(40, TimeUnit.SECONDS)
                     .build();
             http = new OkHttpClient.Builder()
-                    .connectTimeout(8, TimeUnit.SECONDS)
-                    .readTimeout(12, TimeUnit.SECONDS)
-                    .writeTimeout(20, TimeUnit.SECONDS)
-                    .callTimeout(18, TimeUnit.SECONDS)
+                    .dns(dns)
+                    .connectTimeout(20, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(30, TimeUnit.SECONDS)
+                    .callTimeout(45, TimeUnit.SECONDS)
                     .addInterceptor(chain -> {
                         Request request = chain.request();
                         String path = request.url().encodedPath();

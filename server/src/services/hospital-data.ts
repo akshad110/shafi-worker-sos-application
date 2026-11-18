@@ -15,6 +15,24 @@ function sharedId(): string {
   return crypto.randomBytes(4).toString('hex');
 }
 
+function requiredDocuments(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (typeof item === 'string' && item.trim()) {
+      return [{ id: item.trim(), name: item.trim(), instruction: '' }];
+    }
+    if (!item || typeof item !== 'object') return [];
+    const doc = item as Doc;
+    const name = String(doc.name || doc.title || doc.label || '').trim();
+    if (!name) return [];
+    return [{
+      id: String(doc.id || name),
+      name,
+      instruction: String(doc.instruction || doc.note || doc.description || '').trim(),
+    }];
+  });
+}
+
 function asList(value: unknown): string[] {
   if (Array.isArray(value)) return value.map((item) => String(item)).filter(Boolean);
   if (typeof value === 'string' && value.trim()) return value.split(',').map((item) => item.trim()).filter(Boolean);
@@ -125,6 +143,7 @@ export function presentJob(job: Doc, hospital?: { name: string; verified: boolea
     experienceYears: Number.parseInt(String(job.experience || '0'), 10) || 0,
     skills: asList(job.skills),
     certifications: asList(job.certifications),
+    requiredDocuments: requiredDocuments(job.requiredDocuments),
     reportingInstructions: job.notes || '',
     geofenceEnabled: false,
     createdAt: job.createdAt ? new Date(job.createdAt) : new Date(),
