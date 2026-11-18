@@ -123,8 +123,13 @@ public class WorkerRepository {
     }
 
     public Dtos.ApplicationItem apply(String jobId, String note) throws IOException, ApiException {
+        return apply(jobId, note, java.util.Collections.emptyList());
+    }
+
+    public Dtos.ApplicationItem apply(String jobId, String note, java.util.List<String> documentIds) throws IOException, ApiException {
         Map<String, Object> body = new HashMap<>();
         if (note != null && !note.trim().isEmpty()) body.put("note", note.trim());
+        if (documentIds != null && !documentIds.isEmpty()) body.put("documentIds", documentIds);
         return unwrap(api.apply(jobId, body).execute());
     }
 

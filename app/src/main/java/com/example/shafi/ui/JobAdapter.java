@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.shafi.R;
+import com.example.shafi.core.AppliedJobs;
 import com.example.shafi.core.AppExecutors;
 import com.example.shafi.core.Format;
 import com.example.shafi.data.Dtos;
@@ -145,15 +146,23 @@ public class JobAdapter extends ListAdapter<Dtos.JobItem, JobAdapter.Holder> {
             sheetBinding.btnApply.setEnabled(false);
             return;
         }
+        if (item.hasApplied) AppliedJobs.mark(item.id);
+        if (AppliedJobs.contains(item.id)) item.hasApplied = true;
         if (item.hasApplied) {
+            sheetBinding.btnApply.setVisibility(View.VISIBLE);
             sheetBinding.btnApply.setText("Already applied");
             sheetBinding.btnApply.setEnabled(false);
-        } else if (ready && !item.eligible) {
+        } else if (!ready) {
+            sheetBinding.btnApply.setVisibility(View.INVISIBLE);
+            sheetBinding.btnApply.setEnabled(false);
+        } else if (!item.eligible) {
+            sheetBinding.btnApply.setVisibility(View.VISIBLE);
             sheetBinding.btnApply.setText("Apply");
             sheetBinding.btnApply.setEnabled(false);
             sheetBinding.tvError.setVisibility(View.VISIBLE);
             sheetBinding.tvError.setText(item.eligibilityReason == null ? "You cannot apply for this job yet." : item.eligibilityReason);
         } else {
+            sheetBinding.btnApply.setVisibility(View.VISIBLE);
             sheetBinding.btnApply.setText("Apply now");
             sheetBinding.btnApply.setEnabled(true);
         }
@@ -318,9 +327,11 @@ public class JobAdapter extends ListAdapter<Dtos.JobItem, JobAdapter.Holder> {
 
     private void confirmApply(View view, String id) {
         Dtos.JobItem job = details.containsKey(id) ? details.get(id) : find(id);
-        if (job != null && (job.hasApplied || (details.containsKey(id) && !job.eligible))) return;
+        boolean applied = AppliedJobs.contains(id) || (job != null && job.hasApplied);
+        if (job != null && (applied || (details.containsKey(id) && !job.eligible))) return;
         Intent intent = new Intent(view.getContext(), ApplyActivity.class);
         intent.putExtra("id", id);
+        intent.putExtra("applied", applied);
         if (job != null && job.title != null) {
             String place = job.hospitalName == null ? "" : job.hospitalName;
             intent.putExtra("title", place.isEmpty() ? job.title : job.title + " at " + place);

@@ -22,6 +22,46 @@ function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function fileBytes(value: unknown): Buffer | null {
+  if (!value) return null;
+  if (Buffer.isBuffer(value)) return value.length ? value : null;
+  if (value instanceof Uint8Array) {
+    const bytes = Buffer.from(value);
+    return bytes.length ? bytes : null;
+  }
+  return null;
+}
+
+function hospitalPreviewFile(file: {
+  id: string;
+  type: string;
+  fileName: string;
+  mimeType: string;
+  contentType?: string;
+  size: number;
+  status: string;
+  storageKey: string;
+  data?: unknown;
+  createdAt?: Date;
+}) {
+  const bytes = fileBytes(file.data);
+  const contentType = file.contentType || file.mimeType || 'application/octet-stream';
+  return {
+    id: file.id,
+    type: file.type,
+    name: file.type,
+    label: file.type,
+    fileName: file.fileName,
+    mimeType: contentType,
+    contentType,
+    size: file.size || bytes?.length || 0,
+    status: file.status,
+    storageKey: file.storageKey,
+    uploadedAt: file.createdAt ? new Date(file.createdAt).toISOString() : new Date().toISOString(),
+    ...(bytes ? { data: new mongoose.mongo.Binary(bytes) } : {}),
+  };
+}
+
 function jobCard(job: any, distanceKm: number | null = null) {
   return {
     id: job.id,
@@ -210,7 +250,14 @@ export async function listJobs(query: Record<string, string>, workerId?: string)
       items.sort((a, b) => scoreJob(b, profile) - scoreJob(a, profile));
     }
     const slice = items.slice((page - 1) * limit, page * limit);
-    return { items: slice, page, limit, total: items.length, hasMore: page * limit < items.length };
+    const appliedIds = workerId ? await appliedJobIds(workerId) : new Set<string>();
+    return {
+      items: slice.map((job) => ({ ...job, hasApplied: appliedIds.has(String(job.id)) })),
+      page,
+      limit,
+      total: items.length,
+      hasMore: page * limit < items.length,
+    };
   }
   const page = Math.max(1, Number(query.page) || 1);
   const limit = Math.min(50, Math.max(1, Number(query.limit) || 20));
@@ -252,13 +299,25 @@ export async function listJobs(query: Record<string, string>, workerId?: string)
   }
   const total = decorated.length;
   const slice = decorated.slice((page - 1) * limit, page * limit);
+  const appliedIds = workerId ? await appliedJobIds(workerId) : new Set<string>();
   return {
-    items: slice.map((item) => jobCard(item.job, item.distanceKm)),
+    items: slice.map((item) => ({ ...jobCard(item.job, item.distanceKm), hasApplied: appliedIds.has(String(item.job.id)) })),
     page,
     limit,
     total,
     hasMore: page * limit < total,
   };
+}
+
+async function appliedJobIds(workerId: string) {
+  const ids = new Set<string>();
+  const shared = await hospitalApplicationsFor(workerId);
+  shared.forEach((item) => {
+    if (item.jobId) ids.add(String(item.jobId));
+  });
+  const own = await Application.find({ workerId }).select('jobId');
+  own.forEach((item) => ids.add(String(item.jobId)));
+  return ids;
 }
 
 export async function getJob(jobId: string, workerId?: string) {
@@ -341,24 +400,20 @@ async function applicationView(application: any) {
   };
 }
 
-export async function applyToJob(workerId: string, jobId: string, note?: string) {
+export async function applyToJob(workerId: string, jobId: string, note?: string, documentIds: string[] = []) {
   const { user, profile } = await loadWorker(workerId);
   if (!canApply(user, profile)) {
     throw new ApiError(403, 'Complete your profile before applying', 'PROFILE_INCOMPLETE');
   }
   const sharedRaw = await loadHospitalJob(jobId);
   if (sharedRaw) {
-    const files = await WorkerDocument.find({ workerId }).sort({ createdAt: -1 }).limit(8);
+    const chosen = documentIds.filter((id) => mongoose.isValidObjectId(id));
+    const files = chosen.length
+      ? await WorkerDocument.find({ workerId, _id: { $in: chosen } })
+      : await WorkerDocument.find({ workerId }).sort({ createdAt: -1 }).limit(8);
     const application = await createHospitalApplication(workerId, user, profile, sharedRaw, {
       note: note?.trim(),
-      documents: files.map((file) => ({
-        id: file.id,
-        type: file.type,
-        fileName: file.fileName,
-        mimeType: file.mimeType,
-        status: file.status,
-        storageKey: file.storageKey,
-      })),
+      documents: files.map((file) => hospitalPreviewFile(file)),
     });
     const view = presentApplication(application, sharedRaw);
     await notify({
@@ -1092,7 +1147,7 @@ export async function dashboard(userId: string) {
     workerId: userId,
     expiresAt: { $ne: null, $lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
     status: { $ne: 'REJECTED' },
-  });
+  }).select('-data');
   for (const doc of docs) {
     const recent = await Notification.findOne({
       userId,
@@ -1217,8 +1272,10 @@ export async function addDocument(workerId: string, file: { originalname: string
     type,
     fileName: path.basename(file.originalname || 'document'),
     mimeType: file.mimetype,
+    contentType: file.mimetype,
     size: file.size,
     storageKey: key,
+    data: file.buffer,
     status: 'PENDING',
     expiresAt: expiresAt ? new Date(expiresAt) : undefined,
   });
@@ -1233,7 +1290,7 @@ export async function addDocument(workerId: string, file: { originalname: string
 }
 
 export async function listDocuments(workerId: string) {
-  const docs = await WorkerDocument.find({ workerId }).sort({ createdAt: -1 });
+  const docs = await WorkerDocument.find({ workerId }).select('-data').sort({ createdAt: -1 });
   return docs.map((doc) => ({
     id: doc.id,
     type: doc.type,
@@ -1266,6 +1323,8 @@ export function readSignedDocument(documentId: string, exp: string, sig: string)
   }
   return WorkerDocument.findById(documentId).then((doc) => {
     if (!doc) throw new ApiError(404, 'Document not found', 'NOT_FOUND');
+    const stored = fileBytes(doc.data);
+    if (stored) return { doc, bytes: stored };
     return { doc, bytes: readLocalObject(doc.storageKey) };
   });
 }

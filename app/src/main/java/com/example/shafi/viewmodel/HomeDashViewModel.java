@@ -40,8 +40,7 @@ public class HomeDashViewModel extends AndroidViewModel {
     }
 
     public void refresh(boolean force) {
-        if (!force && loadedAt > 0 && System.currentTimeMillis() - loadedAt < 60_000) return;
-        if (busy) return;
+        if (!force && busy) return;
         busy = true;
         AppExecutors.IO.execute(() -> {
             try {

@@ -16,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.shafi.R;
 import com.example.shafi.SystemBars;
+import com.example.shafi.core.AppliedJobs;
 import com.example.shafi.core.AppExecutors;
 import com.example.shafi.data.Dtos;
 import com.example.shafi.data.WorkerRepository;
@@ -54,6 +55,9 @@ public class ApplyActivity extends AppCompatActivity {
         if (title != null && !title.isEmpty()) binding.tvJob.setText(title);
         binding.btnBack.setOnClickListener(v -> finish());
         binding.btnSubmit.setOnClickListener(v -> submit());
+        if (getIntent().getBooleanExtra("applied", false) || AppliedJobs.contains(jobId)) {
+            lockApplied();
+        }
         loadRequirements();
     }
 
@@ -88,10 +92,12 @@ public class ApplyActivity extends AppCompatActivity {
                 addSlot(document);
             }
         }
-        if (job != null && job.hasApplied) {
+        if (applied || (job != null && job.hasApplied)) {
+            if (job != null) AppliedJobs.mark(job.id);
             lockApplied();
             return;
         }
+        binding.btnSubmit.setVisibility(View.VISIBLE);
         if (slots.isEmpty()) {
             binding.tvDocsHint.setText("This hospital did not ask for extra documents. You can submit the application.");
         } else {
@@ -106,6 +112,7 @@ public class ApplyActivity extends AppCompatActivity {
         binding.progress.setVisibility(View.GONE);
         binding.tvError.setVisibility(View.GONE);
         binding.tvDocsHint.setText("You have already applied for this job.");
+        binding.btnSubmit.setVisibility(View.VISIBLE);
         binding.btnSubmit.setText("Already applied");
         binding.btnSubmit.setEnabled(false);
         for (Slot slot : slots) {
@@ -161,6 +168,7 @@ public class ApplyActivity extends AppCompatActivity {
         binding.tvError.setVisibility(View.GONE);
         AppExecutors.IO.execute(() -> {
             try {
+                java.util.List<String> documentIds = new java.util.ArrayList<>();
                 for (Slot slot : slots) {
                     byte[] bytes = read(slot.uri);
                     if (bytes.length > 5 * 1024 * 1024) {
@@ -171,9 +179,11 @@ public class ApplyActivity extends AppCompatActivity {
                         mime = slot.fileName.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/jpeg";
                     }
                     String type = slot.name.length() > 80 ? slot.name.substring(0, 80) : slot.name;
-                    repository.upload(type, slot.fileName.isEmpty() ? "document" : slot.fileName, mime, bytes);
+                    Dtos.DocItem saved = repository.upload(type, slot.fileName.isEmpty() ? "document" : slot.fileName, mime, bytes);
+                    if (saved != null && saved.id != null) documentIds.add(saved.id);
                 }
-                Dtos.ApplicationItem application = repository.apply(jobId);
+                Dtos.ApplicationItem application = repository.apply(jobId, "", documentIds);
+                AppliedJobs.mark(jobId);
                 runOnUiThread(() -> {
                     lockApplied();
                     new AlertDialog.Builder(this)

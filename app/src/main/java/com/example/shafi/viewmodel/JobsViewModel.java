@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.shafi.core.ApiException;
+import com.example.shafi.core.AppliedJobs;
 import com.example.shafi.core.AppExecutors;
 import com.example.shafi.core.Resource;
 import com.example.shafi.data.Dtos;
@@ -50,7 +51,7 @@ public class JobsViewModel extends AndroidViewModel {
         this.urgentOnly = urgentOnly;
         this.sort = sort == null ? "newest" : sort;
         String key = this.query + "|" + this.shiftType + "|" + this.urgentOnly + "|" + this.sort;
-        if (!force && key.equals(loadedKey) && !loaded.isEmpty() && System.currentTimeMillis() - loadedAt < 60_000) return;
+        if (!force && key.equals(loadedKey) && loading) return;
         page = 1;
         fetch(true);
     }
@@ -72,6 +73,11 @@ public class JobsViewModel extends AndroidViewModel {
             try {
                 Dtos.JobPage result = repository.jobs(query, shiftType, urgentOnly, sort, page);
                 List<Dtos.JobItem> items = result == null || result.items == null ? new ArrayList<>() : result.items;
+                for (Dtos.JobItem job : items) {
+                    if (job == null) continue;
+                    if (AppliedJobs.contains(job.id)) job.hasApplied = true;
+                    if (job.hasApplied) AppliedJobs.mark(job.id);
+                }
                 if (replace) loaded.clear();
                 loaded.addAll(items);
                 hasMore = result != null && result.hasMore;

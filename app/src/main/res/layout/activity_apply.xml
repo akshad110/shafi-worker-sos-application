@@ -85,6 +85,7 @@
             android:layout_marginTop="18dp"
             android:enabled="false"
             android:maxLines="1"
-            android:text="Submit application" />
+            android:text="Submit application"
+            android:visibility="invisible" />
     </LinearLayout>
 </ScrollView>

@@ -245,6 +245,7 @@ export async function createHospitalApplication(
     }],
     notes: [],
     documents: extra?.documents || [],
+    uploads: extra?.documents || [],
     sourceAccountId: accountId,
   };
   await collection('applications').insertOne(application);

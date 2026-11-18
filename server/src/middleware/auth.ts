@@ -20,6 +20,42 @@ declare global {
   }
 }
 
+export async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+  const header = req.header('authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : '';
+  if (!token) {
+    next();
+    return;
+  }
+  try {
+    const payload = jwt.verify(token, env.jwtAccessSecret) as {
+      sub?: string;
+      sid?: string;
+      role?: string;
+      type?: string;
+    };
+    if (payload.type !== 'access' || !payload.sub || !payload.sid) {
+      next();
+      return;
+    }
+    const user = await User.findById(payload.sub);
+    if (!user || user.status !== 'ACTIVE') {
+      next();
+      return;
+    }
+    req.auth = {
+      id: user.id,
+      role: user.role as AuthUser['role'],
+      hospitalId: user.hospitalId ? String(user.hospitalId) : undefined,
+      sessionId: payload.sid,
+      fullName: user.fullName,
+    };
+  } catch {
+    // A public list still loads when the token is missing or expired.
+  }
+  next();
+}
+
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {
     const header = req.header('authorization') || '';

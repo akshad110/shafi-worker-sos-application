@@ -3,7 +3,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
 import { env } from './config/env';
-import { requireAuth, requireRole } from './middleware/auth';
+import { optionalAuth, requireAuth, requireRole } from './middleware/auth';
 import { ApiError } from './utils/errors';
 import * as auth from './services/auth.service';
 import * as staffing from './services/staffing.service';
@@ -167,8 +167,11 @@ api.get('/workers/me/dashboard', requireAuth, requireRole('WORKER'), async (req,
   try { send(res, 'Dashboard', await staffing.dashboard(req.auth!.id)); } catch (error) { next(error); }
 });
 
-api.get('/jobs', async (req, res, next) => {
-  try { send(res, 'Jobs', await staffing.listJobs(req.query as Record<string, string>)); } catch (error) { next(error); }
+api.get('/jobs', optionalAuth, async (req, res, next) => {
+  try {
+    const workerId = req.auth?.role === 'WORKER' ? req.auth.id : undefined;
+    send(res, 'Jobs', await staffing.listJobs(req.query as Record<string, string>, workerId));
+  } catch (error) { next(error); }
 });
 
 api.get('/jobs/recommended', requireAuth, requireRole('WORKER'), async (req, res, next) => {
@@ -186,7 +189,10 @@ api.get('/jobs/:jobId', requireAuth, async (req, res, next) => {
 api.post('/jobs/:jobId/applications', requireAuth, requireRole('WORKER'), async (req, res, next) => {
   try {
     const note = typeof req.body?.note === 'string' ? req.body.note.slice(0, 280) : '';
-    send(res, 'Application submitted successfully', await staffing.applyToJob(req.auth!.id, pid(req.params.jobId), note), 201);
+    const documentIds = Array.isArray(req.body?.documentIds)
+      ? req.body.documentIds.map((id: unknown) => String(id)).filter(Boolean).slice(0, 12)
+      : [];
+    send(res, 'Application submitted successfully', await staffing.applyToJob(req.auth!.id, pid(req.params.jobId), note, documentIds), 201);
   } catch (error) { next(error); }
 });
 
