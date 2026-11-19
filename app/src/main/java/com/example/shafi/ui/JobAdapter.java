@@ -1,11 +1,13 @@
 package com.example.shafi.ui;
 
 import android.content.Intent;
+import android.graphics.Outline;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -235,7 +237,9 @@ public class JobAdapter extends ListAdapter<Dtos.JobItem, JobAdapter.Holder> {
             coordinator.setPadding(0, 0, 0, 0);
         }
         panel.setPadding(0, 0, 0, 0);
+        roundTop(panel);
         BottomSheetBehavior<FrameLayout> behavior = BottomSheetBehavior.from(panel);
+        behavior.setShouldRemoveExpandedCorners(false);
         behavior.setGestureInsetBottomIgnored(true);
         behavior.setFitToContents(true);
         behavior.setSkipCollapsed(true);
@@ -276,8 +280,25 @@ public class JobAdapter extends ListAdapter<Dtos.JobItem, JobAdapter.Holder> {
                 ((View) panel.getParent()).setPadding(0, 0, 0, 0);
             }
             panel.setPadding(0, 0, 0, 0);
-            BottomSheetBehavior.from(panel).setState(BottomSheetBehavior.STATE_EXPANDED);
+            roundTop(panel);
+            BottomSheetBehavior<FrameLayout> expanded = BottomSheetBehavior.from(panel);
+            expanded.setShouldRemoveExpandedCorners(false);
+            expanded.setState(BottomSheetBehavior.STATE_EXPANDED);
+            panel.post(() -> roundTop(panel));
         });
+    }
+
+    private void roundTop(View panel) {
+        panel.setBackgroundResource(R.drawable.bg_sheet);
+        panel.setClipToOutline(true);
+        panel.setOutlineProvider(new ViewOutlineProvider() {
+            @Override
+            public void getOutline(View view, Outline outline) {
+                int radius = Math.round(28 * view.getResources().getDisplayMetrics().density);
+                outline.setRoundRect(0, 0, view.getWidth(), view.getHeight() + radius, radius);
+            }
+        });
+        panel.invalidateOutline();
     }
 
     private void capScroll() {

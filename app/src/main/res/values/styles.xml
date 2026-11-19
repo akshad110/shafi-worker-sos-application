@@ -115,6 +115,7 @@
 
     <style name="Widget.Shafi.BottomSheet" parent="Widget.MaterialComponents.BottomSheet.Modal">
         <item name="shapeAppearance">@style/ShapeAppearance.Shafi.TopRounded</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Shafi.TopRounded</item>
         <item name="backgroundTint">@color/white</item>
         <item name="paddingBottomSystemWindowInsets">false</item>
         <item name="marginBottomSystemWindowInsets">false</item>
